@@ -4,10 +4,9 @@ How your scenarios read in Xcode's test navigator and test report: test names as
 wrote them, failures at the feature file's line, Scenario Outline examples, skipped
 scenarios, and a test plan per tag.
 
-**CucumberSwift version:** not released yet. These features came with
-[cucumberswift/CucumberSwift#253](https://github.com/cucumberswift/CucumberSwift/pull/253),
-which is on CucumberSwift's `main` branch, so this sample depends on `main` until the next
-release, and then moves to that release. With CucumberSwift 6.2.0 the sample
+**CucumberSwift version:** the latest 6.x release, 6.3.0 or later. 6.3.0 added these
+features ([cucumberswift/CucumberSwift#253](https://github.com/cucumberswift/CucumberSwift/pull/253)).
+With 6.2.0 the sample
 builds and runs, but its tests are named in camel case, its failure is reported in
 `StepDefinitions.swift`, and the skipped scenario fails instead.
 
@@ -83,8 +82,7 @@ test plan, checking that only the failing scenario fails.
 ## Copy it into a project of your own
 
 Copy this folder and the repository's `.mise.toml`, then rename the project and target in
-`Project.swift` and add the target to each test plan again (see above). Until the features
-are released, the copy depends on CucumberSwift's `main`, as this sample does.
+`Project.swift` and add the target to each test plan again (see above).
 
 To bring one part into an existing project instead, copy the feature file you want, its
 steps from `Tests/StepDefinitions.swift`, and for test plans per tag, the test plans and

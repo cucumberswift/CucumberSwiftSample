@@ -7,8 +7,8 @@ the latest CucumberSwift release and against CucumberSwift's `main`.
 
 | Sample | Shows | CucumberSwift |
 |---|---|---|
-| [GettingStarted](Tuist/GettingStarted/README.md) | The smallest working setup: one test target, one feature file, its step definitions | 6.2.0 or later |
-| [TestNavigator](Tuist/TestNavigator/README.md) | How scenarios read in Xcode's test navigator: readable test names, failures at the feature file's line, Scenario Outline examples, skipped scenarios, a test plan per tag | `main`, until the next release ([#253](https://github.com/cucumberswift/CucumberSwift/pull/253)) |
+| [GettingStarted](Tuist/GettingStarted/README.md) | The smallest working setup: one test target, one feature file, its step definitions | 6.3.0 or later |
+| [TestNavigator](Tuist/TestNavigator/README.md) | How scenarios read in Xcode's test navigator: readable test names, failures at the feature file's line, Scenario Outline examples, skipped scenarios, a test plan per tag | 6.3.0 or later |
 
 ## Run a sample
 

@@ -50,8 +50,7 @@ jobs:
       fail-fast: false
       matrix:
         sample: ${{ fromJSON(needs.samples.outputs.samples) }}
-        # "release" is the dependency each Project.swift declares: the latest release,
-        # or for a sample that needs unreleased features, main.
+        # "release" is the dependency each Project.swift declares: the latest release.
         cucumber-swift: [release, main]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

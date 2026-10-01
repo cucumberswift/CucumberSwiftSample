@@ -3,9 +3,8 @@ import ProjectDescription
 // How scenarios read in Xcode's test navigator: readable test names, failures at the
 // feature file's line, Scenario Outline examples, skipped scenarios and a test plan per tag.
 //
-// These features are on CucumberSwift's main branch but not released yet. Until they are,
-// this sample depends on main; once they ship, it moves to the release that has them.
-// To build it against a local CucumberSwift checkout instead, set
+// The sample depends on the latest CucumberSwift release, from 6.3.0, which added these
+// features. To build it against a local CucumberSwift checkout instead, set
 // CUCUMBER_SWIFT_PATH and generate through mise, from anywhere in this repository:
 //
 //     CUCUMBER_SWIFT_PATH=~/src/CucumberSwift mise run generate
@@ -15,7 +14,7 @@ import ProjectDescription
 let cucumberSwift: Package = {
     let path = Environment.cucumberSwiftPath.getString(default: "")
     guard path.isEmpty else { return .local(path: .path(path)) }
-    return .remote(url: "https://github.com/cucumberswift/CucumberSwift", requirement: .branch("main"))
+    return .remote(url: "https://github.com/cucumberswift/CucumberSwift", requirement: .upToNextMajor(from: "6.3.0"))
 }()
 
 let project = Project(

@@ -3,7 +3,7 @@
 The smallest working CucumberSwift setup: a macOS unit test bundle that runs one feature
 file.
 
-**CucumberSwift version:** the latest 6.x release (6.2.0 or later).
+**CucumberSwift version:** the latest 6.x release (6.3.0 or later).
 
 ## What it shows
 

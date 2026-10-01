@@ -14,7 +14,7 @@ import ProjectDescription
 let cucumberSwift: Package = {
     let path = Environment.cucumberSwiftPath.getString(default: "")
     guard path.isEmpty else { return .local(path: .path(path)) }
-    return .remote(url: "https://github.com/cucumberswift/CucumberSwift", requirement: .upToNextMajor(from: "6.2.0"))
+    return .remote(url: "https://github.com/cucumberswift/CucumberSwift", requirement: .upToNextMajor(from: "6.3.0"))
 }()
 
 let project = Project(
