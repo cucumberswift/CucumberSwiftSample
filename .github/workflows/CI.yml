@@ -1,0 +1,87 @@
+name: CI
+
+# Builds and tests every sample in Tuist/ twice: with the CucumberSwift that its
+# Project.swift asks for (normally the latest release), and with CucumberSwift's main.
+# Nightly runs catch a CucumberSwift change that breaks a sample.
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # One test job per sample folder, so a new sample needs no change here.
+  samples:
+    name: List the samples
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      samples: ${{ steps.list.outputs.samples }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: list
+        run: |
+          samples=$(find Tuist -mindepth 2 -maxdepth 2 -name Project.swift | cut -d/ -f2 | sort | jq -R . | jq -sc .)
+          echo "Samples: $samples"
+          echo "samples=$samples" >> "$GITHUB_OUTPUT"
+
+  test:
+    name: ${{ matrix.sample }} with CucumberSwift ${{ matrix.cucumber-swift }}
+    needs: samples
+    runs-on: macos-15
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: ${{ fromJSON(needs.samples.outputs.samples) }}
+        # "release" is the dependency each Project.swift declares: the latest release,
+        # or for a sample that needs unreleased features, main.
+        cucumber-swift: [release, main]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check out CucumberSwift main
+        if: matrix.cucumber-swift == 'main'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: cucumberswift/CucumberSwift
+          ref: main
+          path: build/CucumberSwift
+          persist-credentials: false
+      - name: Show the toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+      - name: Install mise
+        run: command -v mise || brew install mise
+      - name: Install the pinned Tuist
+        env:
+          # mise verifies the download's checksum through the GitHub API.
+          GITHUB_TOKEN: ${{ github.token }}
+          MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
+        run: |
+          mise --version
+          mise install
+      - name: Test ${{ matrix.sample }}
+        env:
+          MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
+          CUCUMBER_SWIFT_PATH: ${{ matrix.cucumber-swift == 'main' && format('{0}/build/CucumberSwift', github.workspace) || '' }}
+          SAMPLE: ${{ matrix.sample }}
+        run: mise run test "$SAMPLE"

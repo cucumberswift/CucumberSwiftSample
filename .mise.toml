@@ -1,0 +1,25 @@
+# Tools and tasks for working on the samples.
+# See CONTRIBUTING.md, and each sample's README.
+
+# The aqua backend below needs a recent mise. 2026.9.1 is the version preinstalled on the
+# GitHub macOS runners, and the oldest verified to install Tuist this way.
+min_version = "2026.9.1"
+
+[tools]
+# Tuist straight from its GitHub release, checked against the release's published
+# checksums (aqua backend). Keep this pin in step with CucumberSwift's .mise.toml.
+"aqua:tuist/tuist" = "4.209.0"
+
+[env]
+# Builds the samples against a local CucumberSwift checkout when CUCUMBER_SWIFT_PATH is
+# set. Tuist only passes TUIST_ variables to a manifest; Project.swift reads this one.
+TUIST_CUCUMBER_SWIFT_PATH = "{{ get_env(name='CUCUMBER_SWIFT_PATH', default='') }}"
+
+[tasks.generate]
+description = "Generate every sample's Xcode project"
+run = 'for sample in Tuist/*/; do tuist generate --no-open --path "$sample"; done'
+
+[tasks.test]
+description = "Build and test one sample, or every sample: mise run test [SampleName]"
+usage = 'arg "[sample]" help="A folder name in Tuist/, such as GettingStarted"'
+run = './scripts/test-sample.sh ${usage_sample:-}'

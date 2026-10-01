@@ -1,0 +1,27 @@
+{
+  "configurations": [
+    {
+      "id": "A1B2C3D4-0000-4000-8000-000000000003",
+      "name": "Configuration 1",
+      "options": {}
+    }
+  ],
+  "defaultOptions": {
+    "environmentVariableEntries": [
+      {
+        "key": "CUCUMBER_TAGS",
+        "value": "Checkout"
+      }
+    ]
+  },
+  "testTargets": [
+    {
+      "target": {
+        "containerPath": "container:TestNavigator.xcodeproj",
+        "identifier": "5688DF278961E61C8E4ED4CF",
+        "name": "TestNavigatorTests"
+      }
+    }
+  ],
+  "version": 1
+}
