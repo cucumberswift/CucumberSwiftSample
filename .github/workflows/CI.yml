@@ -84,3 +84,20 @@ jobs:
           CUCUMBER_SWIFT_PATH: ${{ matrix.cucumber-swift == 'main' && format('{0}/build/CucumberSwift', github.workspace) || '' }}
           SAMPLE: ${{ matrix.sample }}
         run: mise run test "$SAMPLE"
+
+  # The one check the ruleset on main requires, so adding a sample needs no ruleset change.
+  passed:
+    name: All samples pass
+    needs: [samples, test]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Check the sample jobs
+        env:
+          SAMPLES: ${{ needs.samples.result }}
+          TESTS: ${{ needs.test.result }}
+        run: |
+          echo "List the samples: $SAMPLES. Test jobs: $TESTS."
+          [ "$SAMPLES" = success ] && [ "$TESTS" = success ]
