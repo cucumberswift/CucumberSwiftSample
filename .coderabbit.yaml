@@ -1,0 +1,119 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit review settings. CodeRabbit only reviews: it does not change code, issues
+# or pull requests. Maintainers approve and merge.
+language: en-US
+tone_instructions: >-
+  Plain English and short sentences; many contributors are not native speakers.
+  Start each comment with blocking:, question:, suggestion: or nit:, and give a reason.
+early_access: false
+
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  fail_commit_status: false
+  high_level_summary: true
+  high_level_summary_in_walkthrough: true
+  collapse_walkthrough: true
+  sequence_diagrams: false
+  poem: false
+  in_progress_fortune: false
+  suggested_labels: false
+  auto_apply_labels: false
+  suggested_reviewers: false
+  auto_assign_reviewers: false
+  enable_prompt_for_ai_agents: false
+  slop_detection:
+    enabled: false
+
+  auto_review:
+    enabled: true
+    drafts: false
+    auto_incremental_review: true
+    # Stacked pull requests: each layer's base is the branch below it, not main.
+    # Without this, CodeRabbit only reviews pull requests into the default branch.
+    base_branches:
+      - ".*"
+    ignore_usernames:
+      - dependabot[bot]
+
+  # Nothing that commits to a pull request branch.
+  finishing_touches:
+    simplify:
+      enabled: false
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
+    autofix:
+      enabled: false
+    fix_ci:
+      enabled: false
+    resolve_merge_conflict:
+      enabled: false
+
+  pre_merge_checks:
+    docstrings:
+      mode: "off"
+    title:
+      mode: warning
+      requirements: >-
+        Starts with a semantic prefix (fix:, feat:, chore:, docs:, ci:) and is
+        readable on its own.
+    description:
+      mode: warning
+    issue_assessment:
+      mode: warning
+
+  path_filters:
+    - "!**/*.pbxproj"
+    - "!**/*.xcworkspace/**"
+    - "!**/Package.resolved"
+    # The 2021 samples, removed in #1 and kept at the legacy-3.x tag. Their deletion is
+    # hundreds of files, which takes a pull request past CodeRabbit's file limit.
+    - "!Cocoapods/**"
+    - "!Carthage/**"
+    - "!SwiftPackageManager/**"
+
+  path_instructions:
+    - path: "Tuist/**"
+      instructions: >-
+        Each folder in Tuist/ is a sample that users copy as a starting point, so it must
+        work on its own and read as an example of good practice. Its Project.swift depends
+        on the latest CucumberSwift release and switches to TUIST_CUCUMBER_SWIFT_PATH when
+        that is set. Step definitions use Cucumber Expressions and typed parameters, not
+        deprecated closures that take [String]. Flag a change to a sample's behaviour,
+        settings or files that its README.md does not describe, and a README that no longer
+        matches the code. A scenario that fails on purpose must be explained in the
+        sample's README and listed in expected_failures in scripts/test-sample.sh.
+    - path: "scripts/**"
+      instructions: >-
+        Runs on macOS's bash 3.2 as well as in CI. Flag anything that could report a
+        failing sample as passing.
+    - path: ".github/workflows/**"
+      instructions: >-
+        Every job declares a least-privilege permissions block. Untrusted values such as
+        branch names, titles and bodies reach run steps only through quoted environment
+        variables, never through expression interpolation. Do not suggest adding
+        third-party actions; prefer run steps with the GitHub CLI.
+
+  tools:
+    actionlint:
+      enabled: true
+    shellcheck:
+      enabled: true
+    zizmor:
+      enabled: true
+    gitleaks:
+      enabled: true
+
+chat:
+  art: false
+  auto_reply: true
+
+issue_enrichment:
+  auto_enrich:
+    enabled: false
+  planning:
+    enabled: false
+    auto_planning:
+      enabled: false
