@@ -91,8 +91,12 @@ test_sample() {
       status=1
       continue
     fi
-    failed=$(summary_field failed "$summary")
-    total=$(summary_field count "$summary")
+    if ! failed=$(summary_field failed "$summary") || ! total=$(summary_field count "$summary") ||
+      ! [[ "$total" =~ ^[0-9]+$ ]]; then
+      echo "::error::$label: could not read the test results"
+      status=1
+      continue
+    fi
     if [ "$total" -eq 0 ]; then
       echo "::error::$label: no tests ran"
       status=1
