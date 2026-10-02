@@ -28,12 +28,15 @@ normalize() {
   tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9\n'
 }
 
-# Prints the identifiers of a result bundle's failed tests, one per line.
-failed_tests() {
-  xcrun xcresulttool get test-results summary --path "$1" |
-    python3 -c 'import json, sys
-for failure in json.load(sys.stdin).get("testFailures", []):
-    print(failure["testIdentifierString"])' | sort -u
+# Reads a field from a result bundle's summary (the JSON from xcresulttool):
+# "count" prints how many tests ran, "failed" the failed tests' identifiers, one per line.
+summary_field() {
+  python3 -c 'import json, sys
+summary = json.loads(sys.argv[2])
+if sys.argv[1] == "count":
+    print(summary.get("totalTestCount", 0))
+else:
+    print("\n".join(sorted({f["testIdentifierString"] for f in summary.get("testFailures", [])})))' "$1" "$2"
 }
 
 test_sample() {
@@ -41,7 +44,13 @@ test_sample() {
   local dir="$repo_root/Tuist/$sample"
   local status=0
   echo "::group::$sample: generate"
-  tuist generate --no-open --path "$dir"
+  # set -e does not apply here: the function runs as `test_sample … || overall=1`. So each
+  # step that can fail returns or sets status itself, rather than test a stale project.
+  if ! tuist generate --no-open --path "$dir"; then
+    echo "::endgroup::"
+    echo "::error::$sample: tuist generate failed"
+    return 1
+  fi
   echo "::endgroup::"
 
   local plans_json plans
@@ -76,8 +85,18 @@ test_sample() {
       continue
     fi
 
-    local failed
-    failed=$(failed_tests "$bundle")
+    local summary failed total
+    if ! summary=$(xcrun xcresulttool get test-results summary --path "$bundle"); then
+      echo "::error::$label: could not read the test results"
+      status=1
+      continue
+    fi
+    failed=$(summary_field failed "$summary")
+    total=$(summary_field count "$summary")
+    if [ "$total" -eq 0 ]; then
+      echo "::error::$label: no tests ran"
+      status=1
+    fi
     local unexpected=""
     local test_id
     while IFS= read -r test_id; do
