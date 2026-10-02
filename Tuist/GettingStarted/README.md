@@ -38,6 +38,34 @@ run, because CucumberSwift creates the tests when the bundle starts.
 From the command line, `mise run test GettingStarted` generates the project and runs its
 tests.
 
+## Write the steps for a new scenario
+
+You don't have to write a step definition from scratch. Add a step to the feature file
+that nothing matches yet, such as `And the display shows "5"`, and run the tests.
+CucumberSwift reports the step at its line in the feature file, and the failure message
+contains a step definition for it:
+
+```swift
+Then(#/^the display shows \"(.*?)\"$/#) { matches, _ in
+    let string = matches.1
+    XCTFail("Step not implemented: replace this line with your test code")
+}
+```
+
+Copy it from the failure in the issue navigator or the test report into `setupSteps()`,
+and replace the `XCTFail` line with your test code. CucumberSwift also attaches every
+generated step definition to the test `GenerateStepsStubsIfNecessary`: right-click it in
+the test navigator, choose **Jump to Report**, and open the file under **Pending Steps**.
+
+The generated definition matches with a regular expression. You can keep it, or rewrite it
+as a Cucumber Expression like the other steps in this sample:
+
+```swift
+Then("the display shows {string}") { match, _ in
+    let string = try match.first(\.string)
+}
+```
+
 ## Copy it into a project of your own
 
 **Start a new project from it.** Copy this folder and the repository's `.mise.toml`, then
@@ -45,7 +73,9 @@ rename the project and target in `Project.swift`. The sample depends on the Cucu
 release, so it needs no other change. If you don't use mise, install Tuist another way and
 run `tuist generate` in the folder.
 
-**Add CucumberSwift to an existing Xcode project.**
+**Add CucumberSwift to an existing Xcode project.** CucumberSwift's step-by-step
+tutorials walk through this with screenshots, [with Swift Package Manager](https://cucumberswift.org/CucumberSwift/tutorials/cucumberswift/spm-step-by-step/)
+or [with Carthage](https://cucumberswift.org/CucumberSwift/tutorials/cucumberswift/carthage-step-by-step/). In short:
 
 1. Add the package `https://github.com/cucumberswift/CucumberSwift` (File → Add Package
    Dependencies…) and add the `CucumberSwift` library to your unit test target.
@@ -59,6 +89,8 @@ To try the sample with a local CucumberSwift checkout instead of the release, se
 
 ## Learn more
 
-- [CucumberSwift's documentation](https://cucumberswift.org/CucumberSwift/documentation/cucumberswift/)
+- [CucumberSwift's documentation](https://cucumberswift.org/CucumberSwift/documentation/cucumberswift/),
+  including the step-by-step tutorials for [Swift Package Manager](https://cucumberswift.org/CucumberSwift/tutorials/cucumberswift/spm-step-by-step/) and
+  [Carthage](https://cucumberswift.org/CucumberSwift/tutorials/cucumberswift/carthage-step-by-step/)
 - [TestNavigator](../TestNavigator/README.md), the next sample: how scenarios appear in
   Xcode's test navigator.
