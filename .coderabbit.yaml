@@ -68,6 +68,11 @@ reviews:
     - "!**/*.pbxproj"
     - "!**/*.xcworkspace/**"
     - "!**/Package.resolved"
+    # The 2021 samples, removed in #1 and kept at the legacy-3.x tag. Their deletion is
+    # hundreds of files, which takes a pull request past CodeRabbit's file limit.
+    - "!Cocoapods/**"
+    - "!Carthage/**"
+    - "!SwiftPackageManager/**"
 
   path_instructions:
     - path: "Tuist/**"
