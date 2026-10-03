@@ -42,7 +42,9 @@ jobs:
   test:
     name: ${{ matrix.sample }} with CucumberSwift ${{ matrix.cucumber-swift }}
     needs: samples
-    runs-on: macos-15
+    # macos-26, because StepDefinitionMacros turns on a package trait, which an Xcode
+    # project only supports from Xcode 26.4. macos-15 has Xcode 26.3 at most.
+    runs-on: macos-26
     timeout-minutes: 30
     permissions:
       contents: read

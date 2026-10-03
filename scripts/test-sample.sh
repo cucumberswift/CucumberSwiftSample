@@ -75,8 +75,10 @@ test_sample() {
 
     echo "::group::$label: test"
     local xcodebuild_status=0
+    # -skipMacroValidation: Xcode asks before it runs a package's macros the first time, and
+    # xcodebuild cannot ask, so it would refuse to build a sample that uses them.
     xcodebuild test -project "$dir/$sample.xcodeproj" -scheme "$sample" ${plan_args[@]+"${plan_args[@]}"} \
-      -destination 'platform=macOS' -resultBundlePath "$bundle" || xcodebuild_status=$?
+      -destination 'platform=macOS' -skipMacroValidation -resultBundlePath "$bundle" || xcodebuild_status=$?
     echo "::endgroup::"
 
     if [ ! -d "$bundle" ]; then
