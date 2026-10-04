@@ -65,8 +65,8 @@ extension Cucumber: @retroactive StepImplementation {
         // Fix: "Use it as a Cucumber Expression", which removes the $
         // #Then("the basket holds {int} cukes$") { (count: Int) in }
         //
-        // The pattern must be a string literal. Swift reports that a String is not a
-        // StaticString. No fix: write the pattern out.
+        // The pattern must be a string literal, so it can be checked. No fix: write the
+        // pattern out.
         // let thing = "cukes"
         // #Given("I have \(thing)") {}
     }

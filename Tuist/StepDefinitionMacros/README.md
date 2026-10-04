@@ -155,7 +155,7 @@ example of each, commented out: uncomment one to see it.
 | A parameter is missing its closing brace | `#Given("I have {int cukes") { (count: Int) in }` | Insert `}` |
 | Any other mistake in a Cucumber expression, such as empty optional text | `#Given("I have () cukes") {}` | None: the error says what is wrong |
 | A pattern that is read as a regular expression does not compile | `#Then("the basket holds {int} cukes$") { (count: Int) in }`, where the `$` makes it a regular expression | Use it as a Cucumber Expression, which removes the `$` |
-| The pattern is not a string literal | `#Given("I have \(thing)") {}` | None: write the pattern out. Swift reports that a `String` is not a `StaticString`. |
+| The pattern is not a string literal | `#Given("I have \(thing)") {}` | None: write the pattern out |
 
 A pattern that compiles but matches no step in your feature files is not a compile error,
 because a macro cannot read files. CucumberSwift reports those steps when the tests run, as
