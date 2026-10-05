@@ -8,17 +8,18 @@ one in Spanish.
 
 ## Requirements
 
-- **Xcode 26.4 or later, on macOS 26.2 or later**, to use the macros in an Xcode project, as
-  this sample does. Xcode 26.4 is the first Xcode that can turn on a package's traits in a
-  project.
-- **Xcode 16.3 (Swift 6.1) or later, on macOS 15.2 or later**, to use them from a Swift
-  package instead. See [Running tests with Swift Package Manager](https://cucumberswift.org/CucumberSwift/documentation/cucumberswift/running-tests-with-swift-package-manager).
+- **Xcode 16.3 (Swift 6.1) or later, on macOS 15.2 or later.** Swift 6.1 is the first with
+  package traits, which the macros are behind.
 - **The tests run wherever CucumberSwift runs:** macOS 10.15, iOS 13 and tvOS 13 or later.
   Each macro becomes an ordinary step definition when the code compiles, so it adds no
   runtime requirement.
 - **Swift Package Manager only.** Carthage builds CucumberSwift from its Xcode project, which
   cannot deliver macros. A Carthage install keeps the step definition functions, such as
   `Given`.
+
+An Xcode project can turn on a package's traits itself only from Xcode 26.4. This sample works
+with earlier versions too, because a small local package, `MacrosTrait`, turns the trait on
+instead (see [below](#turn-on-the-macros-in-your-own-project)).
 
 ## What it shows
 
@@ -31,12 +32,12 @@ one in Spanish.
   - the mistakes the compiler finds, commented out, one of each.
 - `Tests/Features/Basket.feature` and `Tests/Features/Cesta.feature`, the feature files they
   match.
-- `Project.swift`, which adds CucumberSwift with its `Macros` trait turned on, and the
-  `CucumberSwiftMacros` library.
+- `Project.swift`, which adds CucumberSwift and the `CucumberSwiftMacros` library.
+- `MacrosTrait/`, a local Swift package that only turns on CucumberSwift's `Macros` trait.
 
 ## Run it
 
-You need Xcode 26.4 or later and [mise](https://mise.jdx.dev), which installs the version of
+You need Xcode 16.3 or later and [mise](https://mise.jdx.dev), which installs the version of
 [Tuist](https://tuist.dev) this repository pins. From the repository root:
 
 ```bash
@@ -53,8 +54,7 @@ From the command line, `mise run test StepDefinitionMacros` generates the projec
 tests. `xcodebuild` cannot ask, so the script passes `-skipMacroValidation`; do the same in
 your own CI.
 
-With an earlier Xcode, the project generates, but Xcode does not turn the trait on, so the
-macros do not exist and every one is an error:
+If the trait is not on, the macros do not exist, and each one is an error:
 
 ```
 'Given' is unavailable: Turn on CucumberSwift's Macros package trait to use the step definition macros. In an Xcode project, that needs Xcode 26.4 or later.
@@ -67,38 +67,69 @@ The macros are the `CucumberSwiftMacros` library, which CucumberSwift only build
 `import CucumberSwiftMacros` where you write step definitions. It imports CucumberSwift as
 well.
 
-**In a Tuist project**, add CucumberSwift with `traits:` in `Project.swift`, as this sample
-does, and depend on the `CucumberSwiftMacros` product:
+### With any Xcode from 16.3: a local package
+
+A Swift package can turn on its dependencies' traits in its own `Package.swift`, with any Xcode
+that has Swift 6.1, and SwiftPM then builds CucumberSwift with the trait for the whole project.
+This sample's `MacrosTrait` package does only that:
 
 ```swift
-let project = Project(
-    name: "MyApp",
-    packages: [
-        .package(url: "https://github.com/cucumberswift/CucumberSwift", from: "6.4.0", traits: ["Macros"]),
+// swift-tools-version:6.1
+import PackageDescription
+
+let package = Package(
+    name: "MacrosTrait",
+    platforms: [.macOS(.v14)],
+    products: [
+        .library(name: "MacrosTrait", targets: ["MacrosTrait"])
+    ],
+    dependencies: [
+        .package(url: "https://github.com/cucumberswift/CucumberSwift", from: "6.4.0", traits: ["Macros"])
     ],
     targets: [
+        // Depends on a CucumberSwift product, so that SwiftPM counts the dependency, and its
+        // trait, as used.
         .target(
-            name: "MyAppTests",
-            // …
-            dependencies: [.package(product: "CucumberSwiftMacros")]
-        ),
+            name: "MacrosTrait",
+            dependencies: [.product(name: "CucumberSwiftMacros", package: "CucumberSwift")])
     ]
 )
 ```
 
-Use `.package(...)` here, not `.remote(url:requirement:)`, which has no traits.
+Its target needs one source file, which can be empty: `Sources/MacrosTrait/MacrosTrait.swift`.
+Set `platforms` to your own deployment targets.
 
-**In an Xcode project:**
+1. Copy the `MacrosTrait` folder next to your project.
+2. Add it to the project as a local package, without linking its product to any target. In
+   Tuist, add `.package(path: "MacrosTrait")` to `Project.packages`, as this sample does. In
+   Xcode, choose File → Add Package Dependencies… → **Add Local…**, select the folder, and add
+   its product to no target.
+3. Add CucumberSwift to the project as usual, without the trait: `.package(url:
+   "https://github.com/cucumberswift/CucumberSwift", from: "6.4.0")` in Tuist, or File → Add
+   Package Dependencies… in Xcode.
+4. Add the `CucumberSwiftMacros` library to your unit test target: `.package(product:
+   "CucumberSwiftMacros")` in Tuist, or under the target's **General** tab, **Frameworks and
+   Libraries**, in Xcode.
 
-1. Add the package `https://github.com/cucumberswift/CucumberSwift` (File → Add Package
-   Dependencies…), if your project does not have it yet.
-2. Select the project in the project navigator, open **Package Dependencies**, select
-   CucumberSwift, and turn on its **Macros** trait.
-3. Add the `CucumberSwiftMacros` library to your unit test target, under the target's
-   **General** tab, **Frameworks and Libraries**.
+### With Xcode 26.4 or later: the trait in the project
 
-The rest of the setup is the same as without macros: a `Features` folder reference in the test
-target, and an extension of `Cucumber` that conforms to `StepImplementation`. See
+Xcode 26.4 can turn on a package's traits in the project itself, so `MacrosTrait` is not
+needed. Your step definitions don't change.
+
+- **In Tuist**, add `traits:` to CucumberSwift in `Project.swift`, and remove `MacrosTrait`:
+
+  ```swift
+  .package(url: "https://github.com/cucumberswift/CucumberSwift", from: "6.4.0", traits: ["Macros"]),
+  ```
+
+  Use `.package(...)` here, not `.remote(url:requirement:)`, which has no traits.
+- **In Xcode**, select the project in the project navigator, open **Package Dependencies**,
+  select CucumberSwift, and turn on its **Macros** trait.
+
+### The rest of the setup
+
+The rest is the same as without macros: a `Features` folder reference in the test target, and
+an extension of `Cucumber` that conforms to `StepImplementation`. See
 [GettingStarted](../GettingStarted/README.md).
 
 You can mix both styles in one target: the macros and the step definitions you already have
@@ -180,13 +211,14 @@ and the regular expression's capture group is read as `match.first(\.anonymous)`
 
 ## Copy it into a project of your own
 
-Copy this folder and the repository's `.mise.toml`, then rename the project and target in
-`Project.swift`. If you don't use mise, install Tuist another way and run `tuist generate` in
+Copy this folder, `MacrosTrait` included, and the repository's `.mise.toml`, then rename the
+project and target in `Project.swift`. If you don't use mise, install Tuist another way and run `tuist generate` in
 the folder.
 
 To try the sample with a local CucumberSwift checkout instead of the release, set
 `CUCUMBER_SWIFT_PATH` to its absolute path: `CUCUMBER_SWIFT_PATH=~/src/CucumberSwift mise run generate`.
-The trait is turned on for the local checkout too.
+The checkout's folder must be named `CucumberSwift`: Xcode then uses it in place of the
+CucumberSwift that `MacrosTrait` asks for, with the trait on.
 
 ## Learn more
 

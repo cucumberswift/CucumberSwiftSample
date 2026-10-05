@@ -4,8 +4,9 @@ import ProjectDescription
 // one macOS unit test bundle that runs the feature files in Tests/Features.
 //
 // The macros are the CucumberSwiftMacros product, which CucumberSwift only builds when its
-// Macros package trait is on. Setting a package's traits in an Xcode project needs Xcode 26.4
-// or later; with an earlier Xcode the trait is not applied and the macros do not exist.
+// Macros package trait is on. An Xcode project can turn on a package's traits itself only from
+// Xcode 26.4, so MacrosTrait, a local package, turns it on in its own manifest instead. That
+// works with any Xcode that has Swift 6.1 (Xcode 16.3). See README.md.
 //
 // The sample depends on the latest CucumberSwift release. To build it against a local
 // CucumberSwift checkout instead, set CUCUMBER_SWIFT_PATH and generate through mise,
@@ -13,17 +14,24 @@ import ProjectDescription
 //
 //     CUCUMBER_SWIFT_PATH=~/src/CucumberSwift mise run generate
 //
-// Tuist only passes variables that start with TUIST_ to a manifest, so mise hands it on
-// as TUIST_CUCUMBER_SWIFT_PATH. Run tuist directly with that name instead.
+// The checkout's folder must be named CucumberSwift: Xcode then uses it in place of the
+// CucumberSwift that MacrosTrait asks for. Tuist only passes variables that start with TUIST_
+// to a manifest, so mise hands it on as TUIST_CUCUMBER_SWIFT_PATH. Run tuist directly with
+// that name instead.
 let cucumberSwift: Package.Dependency = {
     let path = Environment.cucumberSwiftPath.getString(default: "")
-    guard path.isEmpty else { return .package(path: .path(path), traits: ["Macros"]) }
-    return .package(url: "https://github.com/cucumberswift/CucumberSwift", from: "6.4.0", traits: ["Macros"])
+    guard path.isEmpty else { return .package(path: .path(path)) }
+    return .package(url: "https://github.com/cucumberswift/CucumberSwift", from: "6.4.0")
 }()
 
 let project = Project(
     name: "StepDefinitionMacros",
-    packages: [cucumberSwift],
+    packages: [
+        cucumberSwift,
+        // Only turns on CucumberSwift's Macros trait. Nothing links it. With Xcode 26.4 or later,
+        // add `traits: ["Macros"]` to CucumberSwift above instead, and remove MacrosTrait.
+        .package(path: "MacrosTrait"),
+    ],
     targets: [
         .target(
             name: "StepDefinitionMacrosTests",
