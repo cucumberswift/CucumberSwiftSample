@@ -1,0 +1,28 @@
+{
+  "configurations": [
+    {
+      "id": "A1B2C3D4-0000-4000-8000-000000000011",
+      "name": "Configuration 1",
+      "options": {}
+    }
+  ],
+  "defaultOptions": {
+    "environmentVariableEntries": [
+      {
+        "key": "CUCUMBER_PARALLEL_TESTING",
+        "value": "YES"
+      }
+    ]
+  },
+  "testTargets": [
+    {
+      "parallelizable": true,
+      "target": {
+        "containerPath": "container:ParallelTesting.xcodeproj",
+        "identifier": "8565DB041955AE1197D860D9",
+        "name": "ParallelTestingTests"
+      }
+    }
+  ],
+  "version": 1
+}

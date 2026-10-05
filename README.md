@@ -9,6 +9,7 @@ the latest CucumberSwift release and against CucumberSwift's `main`.
 |---|---|---|
 | [GettingStarted](Tuist/GettingStarted/README.md) | The smallest working setup: one test target, one feature file, its step definitions | 6.3.0 or later |
 | [TestNavigator](Tuist/TestNavigator/README.md) | How scenarios read in Xcode's test navigator: readable test names, failures at the feature file's line, Scenario Outline examples, skipped scenarios, a test plan per tag | 6.3.0 or later |
+| [ParallelTesting](Tuist/ParallelTesting/README.md) | Scenarios run side by side with Xcode's parallel testing, through CucumberSwift's experimental parallel testing setting, with a serial test plan to compare | 6.4.0 or later |
 
 The samples on `main` are for the latest CucumberSwift release. The earlier samples, step-by-step
 CocoaPods, Carthage and Swift Package Manager setups for CucumberSwift 3.x, are kept at the

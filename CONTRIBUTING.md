@@ -54,7 +54,10 @@ this repository.
 7. **Run `mise run test <SampleName>`.** Every test must pass. A sample that fails on
    purpose, to show a failure, lists the failing scenario in `expected_failures` in
    `scripts/test-sample.sh` and explains it in its README. The script then fails if any
-   other test fails, or if that scenario stops failing.
+   other test fails, or if that scenario stops failing. A sample with a test plan that runs
+   in parallel lists it in `parallel_plans`: the script then fails unless that plan runs its
+   tests in more than one worker, and every test plan in the sample runs the same number of
+   tests.
 
 CI finds every folder in `Tuist/` that has a `Project.swift`, so a new sample needs no
 workflow change. It is tested on each pull request, and every night against the latest
