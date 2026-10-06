@@ -48,10 +48,16 @@ this repository.
    [TestNavigator](Tuist/TestNavigator/TestPlans) and put the target's ID from the
    generated `project.pbxproj` in it. `mise run test` runs every test plan in the scheme.
 5. **Write its `README.md`**: what it shows, how to run it, how to copy it into a project
-   of your own, and which CucumberSwift version it needs. Use
-   [GettingStarted's](Tuist/GettingStarted/README.md) as the model.
-6. **Add it to the table in the [README](README.md).**
-7. **Run `mise run test <SampleName>`.** Every test must pass. A sample that fails on
+   of your own, and which CucumberSwift version it needs, and link its article in the
+   documentation (step 7). Use [GettingStarted's](Tuist/GettingStarted/README.md) as the model.
+6. **Add it to the table in the [README](README.md), and to the table and the Topics list
+   of the documentation's [overview page](Docs/CucumberSwiftSample.docc/CucumberSwiftSample.md).**
+7. **Write its article in the documentation**, `Docs/CucumberSwiftSample.docc/<SampleName>.md`.
+   Use [GettingStarted's](Docs/CucumberSwiftSample.docc/GettingStarted.md) as the model: what
+   the sample shows, its platform and test target, the Xcode it needs, the oldest CucumberSwift
+   it works with, and a link to its README. Take each fact from the sample's README and
+   `Project.swift`, and build the documentation (see below).
+8. **Run `mise run test <SampleName>`.** Every test must pass. A sample that fails on
    purpose, to show a failure, lists the failing scenario in `expected_failures` in
    `scripts/test-sample.sh` and explains it in its README. The script then fails if any
    other test fails, or if that scenario stops failing.
@@ -62,6 +68,26 @@ CucumberSwift release and CucumberSwift's `main`. A sample that asks for a Cucum
 version that isn't released yet is tested only against `main`: `scripts/release-gate.sh` reads
 the oldest version its `Project.swift` asks for, and the release job skips the sample, with a
 notice, until CucumberSwift releases that version.
+
+## The documentation
+
+`Docs/CucumberSwiftSample.docc` is a [DocC](https://www.swift.org/documentation/docc/)
+catalog: an overview page, the entry point, and one article per sample. Its Pages site is
+https://cucumberswift.org/CucumberSwiftSample/documentation/cucumberswiftsample/ , which
+CucumberSwift's documentation links to, so keep the overview's name and path. Build it
+the way the Docs workflow does:
+
+```bash
+xcrun docc convert Docs/CucumberSwiftSample.docc \
+  --fallback-display-name CucumberSwiftSample \
+  --fallback-bundle-identifier org.cucumberswift.samples \
+  --transform-for-static-hosting --hosting-base-path CucumberSwiftSample \
+  --warnings-as-errors --output-path build/docs
+```
+
+It needs no `Package.swift`. On Linux, use `docc` from the Swift toolchain instead of `xcrun docc`.
+The Docs workflow runs on a pull request that changes `Docs/` and builds the catalog; on `main`
+it also deploys the site.
 
 ## When CucumberSwift changes
 

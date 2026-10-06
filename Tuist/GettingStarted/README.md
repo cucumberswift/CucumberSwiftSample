@@ -5,6 +5,8 @@ file.
 
 **CucumberSwift version:** the latest 6.x release (6.3.0 or later).
 
+[GettingStarted in the documentation](https://cucumberswift.org/CucumberSwiftSample/documentation/cucumberswiftsample/gettingstarted/) says what it shows, its platform and test target, and the Xcode and CucumberSwift it needs.
+
 ## What it shows
 
 - `Tests/Features/Calculator.feature`, a feature file with one scenario.
