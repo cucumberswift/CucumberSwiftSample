@@ -14,6 +14,13 @@ sample's README.
 | [GettingStarted](Tuist/GettingStarted/README.md) | The smallest working setup: one test target, one feature file, its step definitions | 6.3.0 or later |
 | [TestNavigator](Tuist/TestNavigator/README.md) | How scenarios read in Xcode's test navigator: readable test names, failures at the feature file's line, Scenario Outline examples, skipped scenarios, a test plan per tag | 6.3.0 or later |
 
+A sample's "CucumberSwift" column can name a version that CucumberSwift hasn't released yet, for a
+feature that ships with that release. Such a sample builds only against a CucumberSwift
+checkout (see [Use a local CucumberSwift checkout](#use-a-local-cucumberswift-checkout)) until
+then. CI still tests it against CucumberSwift's `main`; its test against the release passes
+without building the sample, with a notice that names the version it needs and the latest
+release, and builds the sample once that version is released, with no change here.
+
 The samples on `main` are for the latest CucumberSwift release. The earlier samples, step-by-step
 CocoaPods, Carthage and Swift Package Manager setups for CucumberSwift 3.x, are kept at the
 [`legacy-3.x`](https://github.com/cucumberswift/CucumberSwiftSample/tree/legacy-3.x) tag.
