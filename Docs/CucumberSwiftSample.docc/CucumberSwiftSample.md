@@ -46,6 +46,7 @@ CUCUMBER_SWIFT_PATH=~/src/CucumberSwift mise run generate
 |---|---|---|---|---|
 | <doc:GettingStarted> | The smallest working setup: one test target, one feature file, its step definitions | macOS unit test bundle | 16 or later | 6.3.0 or later |
 | <doc:TestNavigator> | How scenarios read in Xcode's test navigator: readable test names, failures at the feature file's line, Scenario Outline examples, skipped scenarios, a test plan per tag | macOS unit test bundle | 16 or later | 6.3.0 or later |
+| <doc:ParallelTesting> | Scenarios run side by side with Xcode's parallel testing, through CucumberSwift's experimental parallel testing setting, with a serial test plan to compare | macOS unit test bundle | 16 or later | 6.4.0 or later |
 
 ### Add CucumberSwift to your own project
 
@@ -57,3 +58,4 @@ CucumberSwift's step-by-step tutorials set up a test target from scratch, with [
 
 - <doc:GettingStarted>
 - <doc:TestNavigator>
+- <doc:ParallelTesting>

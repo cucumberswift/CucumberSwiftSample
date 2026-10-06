@@ -6,6 +6,8 @@ parallel testing setting. The setting is **experimental**: read
 
 **CucumberSwift version:** 6.4.0 or later.
 
+[ParallelTesting in the documentation](https://cucumberswift.org/CucumberSwiftSample/documentation/cucumberswiftsample/paralleltesting/) says what it shows, its platform and test target, where parallel testing is verified, and the Xcode and CucumberSwift it needs.
+
 ## What it shows
 
 - `TestPlans/Parallel.xctestplan`, the default test plan. It turns on **Execute in
