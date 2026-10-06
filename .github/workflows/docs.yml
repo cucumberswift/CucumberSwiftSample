@@ -48,10 +48,13 @@ jobs:
           persist-credentials: false
       - name: Show the toolchain
         run: swift --version
-      # --warnings-as-errors fails on an unresolved link, a missing page or any other warning.
+      # The runner links only swift and swiftc into the PATH, so take docc from the
+      # toolchain directory they point into. --warnings-as-errors fails on an unresolved
+      # link, a missing page or any other warning.
       - name: Build the catalog
         run: |
-          docc convert "$CATALOG" \
+          docc="$(dirname "$(readlink -f "$(command -v swift)")")/docc"
+          "$docc" convert "$CATALOG" \
             --fallback-display-name CucumberSwiftSample \
             --fallback-bundle-identifier org.cucumberswift.samples \
             --transform-for-static-hosting \
