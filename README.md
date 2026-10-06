@@ -5,6 +5,10 @@ the Gherkin/BDD test framework for Swift. Each one is a starting point for one w
 CucumberSwift, and each one is built and tested on every change and every night, against
 the latest CucumberSwift release and against CucumberSwift's `main`.
 
+The [documentation](https://cucumberswift.org/CucumberSwiftSample/documentation/cucumberswiftsample/) describes each sample: what it shows, its platform and test
+target, the Xcode it needs, and the CucumberSwift it works with. The table links each
+sample's README.
+
 | Sample | Shows | CucumberSwift |
 |---|---|---|
 | [GettingStarted](Tuist/GettingStarted/README.md) | The smallest working setup: one test target, one feature file, its step definitions | 6.3.0 or later |
@@ -14,9 +18,6 @@ The samples on `main` are for the latest CucumberSwift release. The earlier samp
 CocoaPods, Carthage and Swift Package Manager setups for CucumberSwift 3.x, are kept at the
 [`legacy-3.x`](https://github.com/cucumberswift/CucumberSwiftSample/tree/legacy-3.x) tag.
 They are no longer maintained or tested.
-
-The [documentation](https://cucumberswift.org/CucumberSwiftSample/documentation/cucumberswiftsample/)
-says what each sample shows, the platform and Xcode it needs, and the CucumberSwift it works with.
 
 ## Run a sample
 

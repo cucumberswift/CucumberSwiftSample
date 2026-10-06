@@ -48,8 +48,8 @@ this repository.
    [TestNavigator](Tuist/TestNavigator/TestPlans) and put the target's ID from the
    generated `project.pbxproj` in it. `mise run test` runs every test plan in the scheme.
 5. **Write its `README.md`**: what it shows, how to run it, how to copy it into a project
-   of your own, and which CucumberSwift version it needs. Use
-   [GettingStarted's](Tuist/GettingStarted/README.md) as the model.
+   of your own, and which CucumberSwift version it needs, and link its article in the
+   documentation (step 7). Use [GettingStarted's](Tuist/GettingStarted/README.md) as the model.
 6. **Add it to the table in the [README](README.md), and to the table and the Topics list
    of the documentation's [overview page](Docs/CucumberSwiftSample.docc/CucumberSwiftSample.md).**
 7. **Write its article in the documentation**, `Docs/CucumberSwiftSample.docc/<SampleName>.md`.
