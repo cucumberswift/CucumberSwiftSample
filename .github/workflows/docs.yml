@@ -1,0 +1,108 @@
+name: Docs
+
+# Builds the samples' documentation, the DocC catalog in Docs/, and publishes it to this
+# repository's GitHub Pages site. The organization site serves the domain, so the entry
+# point is https://cucumberswift.org/CucumberSwiftSample/documentation/cucumberswiftsample/
+#
+# A pull request that changes the catalog gets the build, with warnings as errors, and no
+# deployment. Only main deploys. To redeploy: Docs > Run workflow on main.
+#
+# It builds no sample and runs no project code, so it needs no macOS runner: DocC comes
+# with the Swift toolchain on the ubuntu runners.
+on:
+  pull_request:
+    paths:
+      - 'Docs/**'
+      - '.github/workflows/docs.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'Docs/**'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+# Nothing by default; each job asks for what it uses. Only GITHUB_TOKEN is used.
+permissions: {}
+
+# `shell: bash` adds `-o pipefail`.
+defaults:
+  run:
+    shell: bash
+
+env:
+  CATALOG: Docs/CucumberSwiftSample.docc
+  # The path of the Pages site: the repository's name.
+  BASE_PATH: CucumberSwiftSample
+
+jobs:
+  build:
+    name: Build the documentation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Show the toolchain
+        run: swift --version
+      # --warnings-as-errors fails on an unresolved link, a missing page or any other warning.
+      - name: Build the catalog
+        run: |
+          docc convert "$CATALOG" \
+            --fallback-display-name CucumberSwiftSample \
+            --fallback-bundle-identifier org.cucumberswift.samples \
+            --transform-for-static-hosting \
+            --hosting-base-path "$BASE_PATH" \
+            --warnings-as-errors \
+            --output-path "$RUNNER_TEMP/site"
+      - name: Check the entry point is in the site
+        run: test -f "$RUNNER_TEMP/site/documentation/cucumberswiftsample/index.html"
+      # One artifact per attempt: deploy-pages fails if a re-run finds two with the same name.
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        if: ${{ github.event_name != 'pull_request' }}
+        with:
+          name: github-pages-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/site
+
+  deploy:
+    name: Publish to Pages
+    needs: build
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-24.04
+    # Up to 10 minutes for deploy-pages, and a few for the site check.
+    timeout-minutes: 20
+    # pages: write and id-token: write -> deploy.
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    # One deployment at a time. The newest run publishes the whole site, so a waiting run
+    # may be replaced by a newer one.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+        with:
+          artifact_name: github-pages-${{ github.run_attempt }}
+      # Pages caches files for up to 10 minutes: wait a little longer than that.
+      - name: Check that the entry point answers
+        env:
+          PAGE_URL: ${{ steps.deploy.outputs.page_url }}
+        run: |
+          url="${PAGE_URL%/}/documentation/cucumberswiftsample/"
+          for _ in $(seq 1 66); do
+            if [ "$(curl -sS -o /dev/null -w '%{http_code}' -L "$url")" = 200 ]; then
+              echo "$url answers 200."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::$url does not answer 200."
+          exit 1
