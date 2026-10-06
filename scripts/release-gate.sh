@@ -16,6 +16,8 @@
 #
 # The answer goes to $GITHUB_OUTPUT, or to the terminal when that is not set.
 # CUCUMBER_SWIFT_LATEST=X.Y.Z replaces the lookup (it then stands for the only release), to try it without the network.
+# REQUIREMENTS_ONLY=1 only prints the requirements, as "kind version" lines, and exits; the
+# Release workflow reads them through .github/scripts/release-plan.sh.
 set -euo pipefail
 
 repo_root=$(cd "$(dirname "$0")/.." && pwd)
@@ -34,6 +36,11 @@ requirements=$(perl -0pe 's{/\*.*?\*/}{}gs; s{(^|\s)//[^\n]*}{}gm; tr/\n/ /' "$m
   grep -oiE '/cucumberswift(\.git)?"[^)]*\)' |
   grep -oE '(from:|exact:|\.exact\()[[:space:]]*"[0-9]+\.[0-9]+\.[0-9]+"' |
   sed -E 's/^from:.*"([0-9.]+)"$/from \1/; s/^(exact:|\.exact\().*"([0-9.]+)"$/exact \2/' | sort -k2,2V || true)
+
+if [ -n "${REQUIREMENTS_ONLY:-}" ]; then
+  [ -z "$requirements" ] || echo "$requirements"
+  exit 0
+fi
 
 if [ -z "$requirements" ]; then
   echo "$sample asks for no CucumberSwift version in its Project.swift, so the release job builds it."
