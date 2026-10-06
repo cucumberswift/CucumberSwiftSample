@@ -26,11 +26,11 @@ manifest="$repo_root/Tuist/$sample/Project.swift"
 
 # The requirements of CucumberSwift's own dependency declarations, as "kind version" lines: kind is
 # `from` for `from: "6.3.0"` (which covers `.upToNextMajor(from:)` and `.upToNextMinor(from:)`)
-# and `exact` for `exact: "6.3.0"` and `.exact("6.3.0")`. Comments are dropped first (a `//`
-# that starts the line or follows a space; the one in `https://` stays). The lines are then
+# and `exact` for `exact: "6.3.0"` and `.exact("6.3.0")`. Comments are dropped first: `/* … */`
+# blocks, and a `//` that starts the line or follows a space (the one in `https://` stays). The lines are then
 # joined, so the URL and its requirement can sit on different lines, and each declaration is read up
 # to its first `)`. A declaration of another package (CucumberSwiftExpressions) is not counted.
-requirements=$(sed -E 's#(^|[[:space:]])//.*##' "$manifest" | tr '\n' ' ' |
+requirements=$(perl -0pe 's{/\*.*?\*/}{}gs; s{(^|\s)//[^\n]*}{}gm; tr/\n/ /' "$manifest" |
   grep -oiE '/cucumberswift(\.git)?"[^)]*\)' |
   grep -oE '(from:|exact:|\.exact\()[[:space:]]*"[0-9]+\.[0-9]+\.[0-9]+"' |
   sed -E 's/^from:.*"([0-9.]+)"$/from \1/; s/^(exact:|\.exact\().*"([0-9.]+)"$/exact \2/' | sort -k2,2V || true)
