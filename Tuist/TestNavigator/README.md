@@ -10,6 +10,8 @@ With 6.2.0 the sample
 builds and runs, but its tests are named in camel case, its failure is reported in
 `StepDefinitions.swift`, and the skipped scenario fails instead.
 
+[TestNavigator in the documentation](https://cucumberswift.org/CucumberSwiftSample/documentation/cucumberswiftsample/testnavigator/) says what it shows, its platform and test target, and the Xcode and CucumberSwift it needs.
+
 ## What it shows
 
 Four feature files in `Tests/Features`, about a shop:
