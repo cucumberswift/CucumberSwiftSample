@@ -58,7 +58,10 @@ this repository.
 
 CI finds every folder in `Tuist/` that has a `Project.swift`, so a new sample needs no
 workflow change. It is tested on each pull request, and every night against the latest
-CucumberSwift release and CucumberSwift's `main`.
+CucumberSwift release and CucumberSwift's `main`. A sample that asks for a CucumberSwift
+version that isn't released yet is tested only against `main`: `scripts/release-gate.sh` reads
+the oldest version its `Project.swift` asks for, and the release job skips the sample, with a
+notice, until CucumberSwift releases that version.
 
 ## When CucumberSwift changes
 
