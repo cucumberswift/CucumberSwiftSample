@@ -24,12 +24,14 @@ sample=${1:?usage: release-gate.sh SampleName}
 manifest="$repo_root/Tuist/$sample/Project.swift"
 [ -f "$manifest" ] || { echo "::error::$sample: no $manifest"; exit 1; }
 
-# The requirements on CucumberSwift's own dependency lines, as "kind version" lines: kind is
+# The requirements of CucumberSwift's own dependency declarations, as "kind version" lines: kind is
 # `from` for `from: "6.3.0"` (which covers `.upToNextMajor(from:)` and `.upToNextMinor(from:)`)
 # and `exact` for `exact: "6.3.0"` and `.exact("6.3.0")`. Comments are dropped first (a `//`
-# that starts the line or follows a space; the one in `https://` stays), and a line that names
-# another package (CucumberSwiftExpressions) is not counted.
-requirements=$(sed -E 's#(^|[[:space:]])//.*##' "$manifest" | grep -iE 'cucumberswift(\.git)?"' | grep -viE 'cucumberswift[a-z]' |
+# that starts the line or follows a space; the one in `https://` stays). The lines are then
+# joined, so the URL and its requirement can sit on different lines, and each declaration is read up
+# to its first `)`. A declaration of another package (CucumberSwiftExpressions) is not counted.
+requirements=$(sed -E 's#(^|[[:space:]])//.*##' "$manifest" | tr '\n' ' ' |
+  grep -oiE '/cucumberswift(\.git)?"[^)]*\)' |
   grep -oE '(from:|exact:|\.exact\()[[:space:]]*"[0-9]+\.[0-9]+\.[0-9]+"' |
   sed -E 's/^from:.*"([0-9.]+)"$/from \1/; s/^(exact:|\.exact\().*"([0-9.]+)"$/exact \2/' | sort -k2,2V || true)
 
