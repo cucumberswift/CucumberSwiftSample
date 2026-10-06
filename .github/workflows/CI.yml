@@ -46,7 +46,10 @@ jobs:
   test:
     name: ${{ matrix.sample }} with CucumberSwift ${{ matrix.cucumber-swift }}
     needs: samples
-    runs-on: macos-15
+    # macos-26, for the newest Xcode, which most of the samples' users have. It also checks
+    # that StepDefinitionMacros' MacrosTrait package, which turns on a package trait for Xcode
+    # before 26.4, keeps working with the newest Xcode.
+    runs-on: macos-26
     timeout-minutes: 30
     permissions:
       contents: read
