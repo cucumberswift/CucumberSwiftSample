@@ -8,7 +8,7 @@ The smallest working CucumberSwift setup: a macOS unit test bundle that runs one
 |---|---|
 | Platform | macOS |
 | Test target | A unit test bundle, `GettingStartedTests`, with a macOS 14.0 deployment target, built in Swift 6 language mode |
-| Xcode | 16 or later |
+| Xcode | 16.3 or later |
 | CucumberSwift | The latest 6.x release, 6.3.0 or later |
 | Source | [`Tuist/GettingStarted`](https://github.com/cucumberswift/CucumberSwiftSample/tree/main/Tuist/GettingStarted) |
 | README | [GettingStarted's README](https://github.com/cucumberswift/CucumberSwiftSample/blob/main/Tuist/GettingStarted/README.md) |
@@ -25,7 +25,7 @@ The test target builds in Swift 6 language mode, so the conformance is marked `@
 
 ### Run it
 
-From the repository root, with Xcode 16 or later and mise:
+From the repository root, with Xcode 16.3 or later and mise:
 
 ```bash
 mise install

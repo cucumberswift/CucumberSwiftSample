@@ -6,6 +6,8 @@ one in Spanish.
 
 **CucumberSwift version:** 6.4.0 or later, the first release with the step definition macros.
 
+[StepDefinitionMacros in the documentation](https://cucumberswift.org/CucumberSwiftSample/documentation/cucumberswiftsample/stepdefinitionmacros/) says what it shows, its platform and test target, and the Xcode and CucumberSwift it needs.
+
 ## Requirements
 
 - **Xcode 16.3 (Swift 6.1) or later, on macOS 15.2 or later.** Swift 6.1 is the first with

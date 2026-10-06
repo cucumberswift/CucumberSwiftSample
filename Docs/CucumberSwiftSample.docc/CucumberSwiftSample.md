@@ -44,8 +44,9 @@ CUCUMBER_SWIFT_PATH=~/src/CucumberSwift mise run generate
 
 | Sample | Shows | Platform and test target | Xcode | CucumberSwift |
 |---|---|---|---|---|
-| <doc:GettingStarted> | The smallest working setup: one test target, one feature file, its step definitions | macOS unit test bundle | 16 or later | 6.3.0 or later |
-| <doc:TestNavigator> | How scenarios read in Xcode's test navigator: readable test names, failures at the feature file's line, Scenario Outline examples, skipped scenarios, a test plan per tag | macOS unit test bundle | 16 or later | 6.3.0 or later |
+| <doc:GettingStarted> | The smallest working setup: one test target, one feature file, its step definitions | macOS unit test bundle | 16.3 or later | 6.3.0 or later |
+| <doc:TestNavigator> | How scenarios read in Xcode's test navigator: readable test names, failures at the feature file's line, Scenario Outline examples, skipped scenarios, a test plan per tag | macOS unit test bundle | 16.3 or later | 6.3.0 or later |
+| <doc:StepDefinitionMacros> | Step definitions written as macros, `#Given`, `#When` and `#Then`, checked when they compile: typed closure arguments, the `Step` argument, a localized macro, and the compiler's errors and fixes | macOS unit test bundle | 16.3 or later | 6.4.0 or later |
 
 ### Add CucumberSwift to your own project
 
@@ -57,3 +58,4 @@ CucumberSwift's step-by-step tutorials set up a test target from scratch, with [
 
 - <doc:GettingStarted>
 - <doc:TestNavigator>
+- <doc:StepDefinitionMacros>
