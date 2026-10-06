@@ -21,7 +21,8 @@ then. CI still tests it against CucumberSwift's `main`; its test against the rel
 without building the sample, with a notice that names the version it needs and the latest
 release, and builds the sample once that version is released, with no change here.
 
-The samples on `main` are for the latest CucumberSwift release. The earlier samples, step-by-step
+Each samples release carries the version of the CucumberSwift release it was tested with, such as
+6.3.0, and the documentation shows the samples of each release. The earlier samples, step-by-step
 CocoaPods, Carthage and Swift Package Manager setups for CucumberSwift 3.x, are kept at the
 [`legacy-3.x`](https://github.com/cucumberswift/CucumberSwiftSample/tree/legacy-3.x) tag.
 They are no longer maintained or tested.
@@ -40,6 +41,10 @@ open Tuist/GettingStarted/GettingStarted.xcodeproj
 
 `mise run test` builds and tests every sample, and `mise run test GettingStarted` tests one.
 Each sample's README says how to copy it into a project of your own.
+
+To get the samples as they were tested with one CucumberSwift release, check out the samples
+release with the same version, such as `git checkout 6.3.0`, before you generate the projects.
+`main` can already hold samples for the next CucumberSwift release.
 
 ## Add CucumberSwift to your own project
 
