@@ -5,6 +5,10 @@ the Gherkin/BDD test framework for Swift. Each one is a starting point for one w
 CucumberSwift, and each one is built and tested on every change and every night, against
 the latest CucumberSwift release and against CucumberSwift's `main`.
 
+The [documentation](https://cucumberswift.org/CucumberSwiftSample/documentation/cucumberswiftsample/) describes each sample: what it shows, its platform and test
+target, the Xcode it needs, and the CucumberSwift it works with. The table links each
+sample's README.
+
 | Sample | Shows | CucumberSwift |
 |---|---|---|
 | [GettingStarted](Tuist/GettingStarted/README.md) | The smallest working setup: one test target, one feature file, its step definitions | 6.3.0 or later |
