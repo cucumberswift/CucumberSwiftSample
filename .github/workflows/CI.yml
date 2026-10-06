@@ -42,13 +42,18 @@ jobs:
   test:
     name: ${{ matrix.sample }} with CucumberSwift ${{ matrix.cucumber-swift }}
     needs: samples
-    # macos-26, for the newest Xcode, which most of the samples' users have. It also checks
-    # that StepDefinitionMacros' MacrosTrait package, which turns on a package trait for Xcode
-    # before 26.4, keeps working with the newest Xcode.
-    runs-on: macos-26
+    # Xcode 16.3 (Swift 6.1), the oldest Xcode the samples' READMEs give, so CI checks that
+    # minimum: StepDefinitionMacros' MacrosTrait package needs Swift 6.1 to turn on CucumberSwift's
+    # Macros trait. macos-15 is the image that has Xcode 16.3.
+    runs-on: macos-15
     timeout-minutes: 30
     permissions:
       contents: read
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.3.app/Contents/Developer
+      # The pinned Tuist generates the projects with the image's newest Xcode, which it needs;
+      # scripts/test-sample.sh then builds and tests them with Xcode 16.3.
+      TUIST_DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
     strategy:
       fail-fast: false
       matrix:
@@ -69,6 +74,13 @@ jobs:
           persist-credentials: false
       - name: Show the toolchain
         run: |
+          for dir in "$DEVELOPER_DIR" "$TUIST_DEVELOPER_DIR"; do
+            if [ ! -d "$dir" ]; then
+              echo "::error::$dir is not on this image. It has:"
+              find /Applications -maxdepth 1 -name 'Xcode*.app' | sort
+              exit 1
+            fi
+          done
           xcodebuild -version
           swift --version
       - name: Install mise
