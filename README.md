@@ -14,6 +14,7 @@ sample's README.
 | [GettingStarted](Tuist/GettingStarted/README.md) | The smallest working setup: one test target, one feature file, its step definitions | 6.3.0 or later |
 | [TestNavigator](Tuist/TestNavigator/README.md) | How scenarios read in Xcode's test navigator: readable test names, failures at the feature file's line, Scenario Outline examples, skipped scenarios, a test plan per tag | 6.3.0 or later |
 | [StepDefinitionMacros](Tuist/StepDefinitionMacros/README.md) | Step definitions written as macros, `#Given`, `#When` and `#Then`, checked when they compile: typed closure arguments, the `Step` argument, a localized macro, and the compiler's errors and fixes | 6.4.0 or later |
+| [ParallelTesting](Tuist/ParallelTesting/README.md) | Scenarios run side by side with Xcode's parallel testing, through CucumberSwift's experimental parallel testing setting, with a serial test plan to compare | 6.4.0 or later |
 
 A sample's "CucumberSwift" column can name a version that CucumberSwift hasn't released yet, for a
 feature that ships with that release. Such a sample builds only against a CucumberSwift

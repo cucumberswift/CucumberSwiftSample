@@ -8,7 +8,9 @@
 # project, then runs every test plan in the sample's scheme, or the scheme's tests if it
 # has no test plans. A test plan passes when every failed test is one the sample fails
 # on purpose (see expected_failures below), and the sample's default test plan fails each
-# of those, so a sample that stops showing its failure is caught too.
+# of those, so a sample that stops showing its failure is caught too. A test plan that runs
+# in parallel (see parallel_plans below) must also use more than one worker, and run as
+# many tests as the sample's default test plan.
 set -euo pipefail
 
 repo_root=$(cd "$(dirname "$0")/.." && pwd)
@@ -19,6 +21,16 @@ mkdir -p "$results_dir"
 expected_failures() {
   case "$1" in
     TestNavigator) echo "Apply a discount code" ;;
+  esac
+}
+
+# Test plans that run a sample's scenarios with Xcode's parallel testing, one per line. The
+# sample's other test plans run the same scenarios one after another, so every test plan
+# must run the same number of tests: a scenario that a parallel run drops or runs twice
+# changes the count. A parallel test plan must also run its tests in more than one worker.
+parallel_plans() {
+  case "$1" in
+    ParallelTesting) echo "Parallel" ;;
   esac
 }
 
@@ -65,14 +77,16 @@ test_sample() {
   plans=$(python3 -c 'import json, sys; print(" ".join(p["name"] for p in json.load(sys.stdin)["testPlans"] or []))' <<<"$plans_json")
   [ -n "$plans" ] || plans="-"
 
-  local expected
+  local expected parallel
   expected=$(expected_failures "$sample")
-  local first_plan=true
+  parallel=$(parallel_plans "$sample")
+  local first_plan=true first_total=""
   local plan
   for plan in $plans; do
     local label="$sample"
     [ "$plan" = "-" ] || label="$sample ($plan)"
     local bundle="$results_dir/$sample-$plan.xcresult"
+    local log="$results_dir/$sample-$plan.log"
     local plan_args=()
     [ "$plan" = "-" ] || plan_args=(-testPlan "$plan")
     rm -rf "$bundle"
@@ -82,7 +96,7 @@ test_sample() {
     # -skipMacroValidation: Xcode asks before it runs a package's macros the first time, and
     # xcodebuild cannot ask, so it would refuse to build a sample that uses them.
     xcodebuild test -project "$dir/$sample.xcodeproj" -scheme "$sample" ${plan_args[@]+"${plan_args[@]}"} \
-      -destination 'platform=macOS' -skipMacroValidation -resultBundlePath "$bundle" || xcodebuild_status=$?
+      -destination 'platform=macOS' -skipMacroValidation -resultBundlePath "$bundle" 2>&1 | tee "$log" || xcodebuild_status=$?
     echo "::endgroup::"
 
     if [ ! -d "$bundle" ]; then
@@ -106,6 +120,25 @@ test_sample() {
     if [ "$total" -eq 0 ]; then
       echo "::error::$label: no tests ran"
       status=1
+    fi
+    if [ -n "$parallel" ]; then
+      if [ -z "$first_total" ]; then
+        first_total=$total
+      elif [ "$total" -ne "$first_total" ]; then
+        echo "::error::$label: ran $total tests, but the default test plan ran $first_total"
+        status=1
+      fi
+      if grep -qxF "$plan" <<<"$parallel"; then
+        # xcodebuild names each worker process: "started on 'My Mac - xctest (12345)'".
+        local workers
+        workers=$(grep -oE "started on '[^']*\([0-9]+\)'" "$log" | sort -u | wc -l | tr -d ' ')
+        if [ "$workers" -lt 2 ]; then
+          echo "::error::$label: ran its tests in $workers worker(s); a parallel test plan should use more than one"
+          status=1
+        else
+          echo "$label: ran its tests in $workers workers"
+        fi
+      fi
     fi
     local unexpected=""
     local test_id
