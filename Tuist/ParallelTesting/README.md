@@ -29,7 +29,7 @@ depends on the Mac.
 
 ## Run it
 
-You need Xcode 16 or later and [mise](https://mise.jdx.dev), which installs the version of
+You need Xcode 16.3 or later and [mise](https://mise.jdx.dev), which installs the version of
 [Tuist](https://tuist.dev) this repository pins. From the repository root:
 
 ```bash

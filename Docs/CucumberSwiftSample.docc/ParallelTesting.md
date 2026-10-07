@@ -8,7 +8,7 @@ Scenarios that run side by side with Xcode's parallel testing, through CucumberS
 |---|---|
 | Platform | macOS |
 | Test target | A unit test bundle, `ParallelTestingTests`, without a host app, with a macOS 14.0 deployment target, built in Swift 6 language mode |
-| Xcode | 16 or later to build and run it. Parallel testing is verified on Xcode 26, as the next section says |
+| Xcode | 16.3 or later to build and run it. Parallel testing is verified on Xcode 26, as the next section says |
 | CucumberSwift | 6.4.0 or later, the first release with parallel testing |
 | Source | [`Tuist/ParallelTesting`](https://github.com/cucumberswift/CucumberSwiftSample/tree/main/Tuist/ParallelTesting) |
 | README | [ParallelTesting's README](https://github.com/cucumberswift/CucumberSwiftSample/blob/main/Tuist/ParallelTesting/README.md) |
@@ -17,7 +17,7 @@ Parallel testing is experimental, so read [Before you rely on it](https://github
 
 ### Where it is verified
 
-CucumberSwift's own CI runs every combination of platform and kind of test target with Xcode 26, and the iOS and Mac Catalyst ones also with Xcode 16.0. This sample is a macOS unit test target without a host app, and that combination is verified on Xcode 26: it passed in CucumberSwift's nightly runs on 2026-10-05 and 2026-10-06. CucumberSwift's CI doesn't run macOS with Xcode 16, so this sample doesn't claim it, although it builds with Xcode 16. This sample's own CI runs on the macOS runner's default Xcode. Check the [CucumberSwift documentation](https://cucumberswift.org/CucumberSwift/documentation/cucumberswift/running-tests-in-xcode) for what has been tried on other platforms and with UI tests or a host app.
+CucumberSwift's own CI runs every combination of platform and kind of test target with Xcode 26, and the iOS and Mac Catalyst ones also with Xcode 16.0. This sample is a macOS unit test target without a host app, and that combination is verified on Xcode 26: it passed in CucumberSwift's nightly runs on 2026-10-05 and 2026-10-06. CucumberSwift's CI doesn't run macOS with Xcode 16, so this sample doesn't claim it, although it builds with Xcode 16.3. This sample's own CI runs on the macOS runner's default Xcode. Check the [CucumberSwift documentation](https://cucumberswift.org/CucumberSwift/documentation/cucumberswift/running-tests-in-xcode) for what has been tried on other platforms and with UI tests or a host app.
 
 ### What it shows
 
@@ -30,7 +30,7 @@ You need both settings: Xcode's parallel testing, and CucumberSwift's. Without C
 
 ### Run it
 
-From the repository root, with Xcode 16 or later and mise:
+From the repository root, with Xcode 16.3 or later and mise:
 
 ```bash
 mise install
