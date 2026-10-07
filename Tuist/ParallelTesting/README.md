@@ -84,7 +84,9 @@ says where it has been tried and what to watch for. In short:
 - **Where it has been tried.** Unit tests without a host app, like this sample's, run in
   parallel on macOS, Mac Catalyst and the iOS and tvOS Simulators. Unit tests hosted in an
   app run in parallel only on macOS; elsewhere Xcode runs them in one worker. UI tests run
-  in parallel on the iOS and tvOS Simulators.
+  in parallel on the iOS and tvOS Simulators. A sample of an iOS app tested with XCUITest,
+  where parallel testing pays off most, is planned in
+  [#3](https://github.com/cucumberswift/CucumberSwiftSample/issues/3).
 - **Each worker is a process of its own.** State your step definitions share between
   scenarios, such as a counter or a cache, is per worker. Keep each scenario's state to
   itself, as this sample does.
