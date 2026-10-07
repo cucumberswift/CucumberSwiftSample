@@ -1,6 +1,6 @@
 # CucumberSwiftSample
 
-Working projects that use CucumberSwift, each a starting point for one way of using it.
+Working projects for CucumberSwift 6.x, each a starting point for one way of using it.
 
 @Metadata {
     @TechnologyRoot
@@ -10,7 +10,7 @@ Working projects that use CucumberSwift, each a starting point for one way of us
 
 [CucumberSwiftSample](https://github.com/cucumberswift/CucumberSwiftSample) holds working sample projects for [CucumberSwift](https://cucumberswift.org/CucumberSwift/documentation/cucumberswift/), the Gherkin/BDD test framework for Swift. Each sample shows one way of using CucumberSwift, and works on its own when you copy it out of the repository.
 
-The samples are built and tested on every change and every night, against the latest CucumberSwift release and against CucumberSwift's `main`, so they keep working as CucumberSwift changes. The samples on `main` are for the latest CucumberSwift release. The earlier samples, step-by-step CocoaPods, Carthage and Swift Package Manager setups for CucumberSwift 3.x, are kept at the [`legacy-3.x`](https://github.com/cucumberswift/CucumberSwiftSample/tree/legacy-3.x) tag. They are no longer maintained or tested.
+The samples are built and tested on every change and every night, against the latest CucumberSwift release and against CucumberSwift's `main`, so they keep working as CucumberSwift changes. Each samples release carries the version of the CucumberSwift release it was tested with, such as 6.3.0, shown above the title. This page shows the latest samples release, and the latest samples release of each CucumberSwift major stays online at `/CucumberSwiftSample/N.x/`, such as `/CucumberSwiftSample/6.x/`. The earlier samples, step-by-step CocoaPods, Carthage and Swift Package Manager setups for CucumberSwift 3.x, are kept at the [`legacy-3.x`](https://github.com/cucumberswift/CucumberSwiftSample/tree/legacy-3.x) tag. They are no longer maintained or tested.
 
 ### How the samples are built
 
@@ -31,6 +31,8 @@ open Tuist/GettingStarted/GettingStarted.xcodeproj
 Press ⌘U to run its tests. Xcode's test navigator shows the scenarios after the first run, because CucumberSwift creates the tests when the test bundle starts.
 
 From the command line, `mise run test` builds and tests every sample, and `mise run test GettingStarted` tests one. Use the folder name of the sample, as in `mise run test [Name]`.
+
+To get the samples as they were tested with one CucumberSwift release, check out the samples release with the same version, such as `git checkout 6.3.0`, before you generate the projects. `main` can already hold samples for the next CucumberSwift release.
 
 ### Use a local CucumberSwift checkout
 

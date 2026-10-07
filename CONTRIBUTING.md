@@ -67,7 +67,10 @@ this repository.
 
 CI finds every folder in `Tuist/` that has a `Project.swift`, so a new sample needs no
 workflow change. It is tested on each pull request, and every night against the latest
-CucumberSwift release and CucumberSwift's `main`.
+CucumberSwift release and CucumberSwift's `main`. A sample that asks for a CucumberSwift
+version that isn't released yet is tested only against `main`: `scripts/release-gate.sh` reads
+the oldest version its `Project.swift` asks for, and the release job skips the sample, with a
+notice, until CucumberSwift releases that version.
 
 ## The documentation
 
@@ -75,19 +78,42 @@ CucumberSwift release and CucumberSwift's `main`.
 catalog: an overview page, the entry point, and one article per sample. Its Pages site is
 https://cucumberswift.org/CucumberSwiftSample/documentation/cucumberswiftsample/ , which
 CucumberSwift's documentation links to, so keep the overview's name and path. Build it
-the way the Docs workflow does:
+the way CI does, with warnings as errors:
 
 ```bash
-xcrun docc convert Docs/CucumberSwiftSample.docc \
-  --fallback-display-name CucumberSwiftSample \
-  --fallback-bundle-identifier org.cucumberswift.samples \
-  --transform-for-static-hosting --hosting-base-path CucumberSwiftSample \
-  --warnings-as-errors --output-path build/docs
+.github/scripts/build-docs.sh build/docs
 ```
 
-It needs no `Package.swift`. On Linux, use `docc` from the Swift toolchain instead of `xcrun docc`.
-The Docs workflow runs on a pull request that changes `Docs/` and builds the catalog; on `main`
-it also deploys the site.
+It needs no `Package.swift`, and runs `docc` from Xcode, or on Linux from the Swift toolchain.
+The Docs workflow builds it on each pull request that changes `Docs/`. The site changes only
+with a release (below): it shows the latest release at the root, and the latest release of
+each major at `/CucumberSwiftSample/N.x/`. A release puts "Version X.Y.Z" above the overview's
+title. The overview's subtitle names the major by hand, "for CucumberSwift 6.x"; change it when
+the samples move to a new major, or the release refuses to run.
+
+## Releasing the samples
+
+A samples release carries the version of the CucumberSwift release it is for: samples 6.3.0
+are built and tested with CucumberSwift 6.3.0. Not every CucumberSwift release needs one;
+release the samples when they change, or when a CucumberSwift release changes what they show.
+
+1. In **Actions → Release → Run workflow**, choose `main` (or `support/N.x` for an older
+   major), and type the CucumberSwift version, such as `6.3.0`. Tick **dry run** to only
+   check it. From a terminal: `gh workflow run release.yml --ref main -f version=6.3.0`.
+2. The workflow refuses, and creates nothing, unless the version is a stable CucumberSwift
+   release, has no samples release yet, and is higher than every earlier samples release on
+   the branch; every sample asks for that major at that version or lower; and the overview's
+   subtitle names that major. `.github/scripts/release-plan.sh` runs the same checks locally.
+3. It tests every sample with CucumberSwift checked out at that version, builds the
+   documentation, creates the tag and the release with the documentation attached, and
+   publishes it to the Pages site. To publish the site again without a release, run
+   **Docs** on `main`.
+
+Only admins can release. Never push a release tag by hand.
+
+When CucumberSwift starts a new major, create `support/N.x` for the old major from its last
+samples release before the samples on `main` move to the new major, so the old samples can
+still get fixes and releases.
 
 ## When CucumberSwift changes
 
