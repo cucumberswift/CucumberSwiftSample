@@ -13,3 +13,7 @@ DerivedData/
 
 xcuserdata/
 .DS_Store
+
+# Bazel's output links, and its lockfile, which the samples leave out like .package.resolved.
+bazel-*
+MODULE.bazel.lock
