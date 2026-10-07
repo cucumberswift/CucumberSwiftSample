@@ -215,12 +215,15 @@ print(max(runtimes, key=lambda v: [int(p) for p in v.split(".")]) if runtimes el
   fi
 
   local targets
-  if ! targets=$(cd "$dir" && bazel query 'tests(//...)' ${override[@]+"${override[@]}"} 2>/dev/null) || [ -z "$targets" ]; then
-    echo "::error::$sample: could not list its test targets"
+  if ! targets=$(cd "$dir" && bazel query 'tests(//...)' ${override[@]+"${override[@]}"} 2>>"$results_dir/$sample.log") || [ -z "$targets" ]; then
+    echo "::error::$sample: could not list its test targets; see $results_dir/$sample.log"
     return 1
   fi
   local testlogs
-  testlogs=$(cd "$dir" && bazel info bazel-testlogs ${override[@]+"${override[@]}"} 2>/dev/null)
+  if ! testlogs=$(cd "$dir" && bazel info bazel-testlogs ${override[@]+"${override[@]}"} 2>>"$results_dir/$sample.log"); then
+    echo "::error::$sample: could not find its test logs; see $results_dir/$sample.log"
+    return 1
+  fi
   local target
   for target in $targets; do
     local name=${target#//:}
