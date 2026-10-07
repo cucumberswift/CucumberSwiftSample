@@ -3,6 +3,10 @@ name: CI
 # Builds and tests every sample in Tuist/ twice: with the CucumberSwift that its
 # Project.swift asks for (normally the latest release), and with CucumberSwift's main.
 # Nightly runs catch a CucumberSwift change that breaks a sample.
+#
+# A sample can ask for a CucumberSwift version that is not released yet. Its "release" job
+# then passes without building the sample, and says so in a notice; its "main" job still
+# tests it. Once the version is released, the release job builds it with no change here.
 on:
   pull_request:
   push:
@@ -64,6 +68,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # Decides before the toolchain and Tuist steps, so a skipped sample costs little.
+      - name: Check CucumberSwift has released what ${{ matrix.sample }} asks for
+        id: released
+        if: matrix.cucumber-swift == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SAMPLE: ${{ matrix.sample }}
+        run: ./scripts/release-gate.sh "$SAMPLE"
       - name: Check out CucumberSwift main
         if: matrix.cucumber-swift == 'main'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -73,6 +85,7 @@ jobs:
           path: build/CucumberSwift
           persist-credentials: false
       - name: Show the toolchain
+        if: steps.released.outputs.build != 'false'
         run: |
           for dir in "$DEVELOPER_DIR" "$TUIST_DEVELOPER_DIR"; do
             if [ ! -d "$dir" ]; then
@@ -84,8 +97,10 @@ jobs:
           xcodebuild -version
           swift --version
       - name: Install mise
+        if: steps.released.outputs.build != 'false'
         run: command -v mise || brew install mise
       - name: Install the pinned Tuist
+        if: steps.released.outputs.build != 'false'
         env:
           # mise verifies the download's checksum through the GitHub API.
           GITHUB_TOKEN: ${{ github.token }}
@@ -94,6 +109,7 @@ jobs:
           mise --version
           mise install
       - name: Test ${{ matrix.sample }}
+        if: steps.released.outputs.build != 'false'
         env:
           MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
           CUCUMBER_SWIFT_PATH: ${{ matrix.cucumber-swift == 'main' && format('{0}/build/CucumberSwift', github.workspace) || '' }}

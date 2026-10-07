@@ -15,7 +15,15 @@ sample's README.
 | [TestNavigator](Tuist/TestNavigator/README.md) | How scenarios read in Xcode's test navigator: readable test names, failures at the feature file's line, Scenario Outline examples, skipped scenarios, a test plan per tag | 6.3.0 or later |
 | [StepDefinitionMacros](Tuist/StepDefinitionMacros/README.md) | Step definitions written as macros, `#Given`, `#When` and `#Then`, checked when they compile: typed closure arguments, the `Step` argument, a localized macro, and the compiler's errors and fixes | 6.4.0 or later |
 
-The samples on `main` are for the latest CucumberSwift release. The earlier samples, step-by-step
+A sample's "CucumberSwift" column can name a version that CucumberSwift hasn't released yet, for a
+feature that ships with that release. Such a sample builds only against a CucumberSwift
+checkout (see [Use a local CucumberSwift checkout](#use-a-local-cucumberswift-checkout)) until
+then. CI still tests it against CucumberSwift's `main`; its test against the release passes
+without building the sample, with a notice that names the version it needs and the latest
+release, and builds the sample once that version is released, with no change here.
+
+Each samples release carries the version of the CucumberSwift release it was tested with, such as
+6.3.0, and the documentation shows the samples of each release. The earlier samples, step-by-step
 CocoaPods, Carthage and Swift Package Manager setups for CucumberSwift 3.x, are kept at the
 [`legacy-3.x`](https://github.com/cucumberswift/CucumberSwiftSample/tree/legacy-3.x) tag.
 They are no longer maintained or tested.
@@ -34,6 +42,10 @@ open Tuist/GettingStarted/GettingStarted.xcodeproj
 
 `mise run test` builds and tests every sample, and `mise run test GettingStarted` tests one.
 Each sample's README says how to copy it into a project of your own.
+
+To get the samples as they were tested with one CucumberSwift release, check out the samples
+release with the same version, such as `git checkout 6.3.0`, before you generate the projects.
+`main` can already hold samples for the next CucumberSwift release.
 
 ## Add CucumberSwift to your own project
 

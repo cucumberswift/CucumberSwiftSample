@@ -1,0 +1,222 @@
+name: Release
+
+# A maintainer releases the samples from the Actions tab: Release > Run workflow, pick the
+# branch (main, or support/N.x for an older major) and type the CucumberSwift version the
+# release is for. From a terminal: gh workflow run release.yml --ref main -f version=6.3.0
+#
+# The samples carry CucumberSwift's version numbers: samples 6.3.0 are tested with
+# CucumberSwift 6.3.0. Not every CucumberSwift release needs a samples release.
+#
+# The workflow checks the version (.github/scripts/release-plan.sh), tests every sample
+# with CucumberSwift checked out at that version, builds the docs, and only then creates
+# the tag and the release, with the docs attached. Its last job publishes the docs to this
+# repository's Pages site. There is no version file and no version commit, so it writes
+# nothing to a branch: the tag and the release are created with GITHUB_TOKEN, in a job
+# that only main and support/* can run (the `release` environment).
+#
+# Keep the name "Release": other workflows may match on it.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: CucumberSwift version the samples are released for, such as 6.3.0
+        required: true
+        type: string
+      dry_run:
+        description: Only check the version
+        type: boolean
+        default: false
+
+# Nothing by default; each job asks for what it uses.
+permissions: {}
+
+# One release run per branch at a time.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+# `shell: bash` adds `-o pipefail`.
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  plan:
+    name: Check the version
+    # Only in the cucumberswift repositories. A fork used for testing opts in with the
+    # repository variable RELEASE_IN_FORK=true. Every other job depends on this one.
+    if: ${{ github.repository_owner == 'cucumberswift' || vars.RELEASE_IN_FORK == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # contents: read -> tags, and CucumberSwift's public releases.
+    permissions:
+      contents: read
+    outputs:
+      branch: ${{ steps.guard.outputs.branch }}
+      version: ${{ steps.plan.outputs.version }}
+      latest: ${{ steps.plan.outputs.latest }}
+      samples: ${{ steps.plan.outputs.samples }}
+    steps:
+      # Branch names and inputs are untrusted text. They reach the scripts only as
+      # environment variables.
+      - name: Check the branch and who started the run
+        id: guard
+        env:
+          REF: ${{ github.ref }}
+          ACTOR: ${{ github.triggering_actor }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ "$REF" == "refs/heads/main" ]]; then
+            branch=main
+          elif [[ "$REF" =~ ^refs/heads/support/(0|[1-9][0-9]*)\.x$ ]]; then
+            branch="support/${BASH_REMATCH[1]}.x"
+          else
+            echo "::error::Releases run only on main or on a support/N.x branch."
+            exit 1
+          fi
+          if ! [[ "$ACTOR" =~ ^[A-Za-z0-9-]+$ ]]; then
+            echo "::error::Only repository admins can start a release."
+            exit 1
+          fi
+          permission=$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$ACTOR/permission" --jq .permission)
+          if [[ "$permission" != "admin" ]]; then
+            echo "::error::Only repository admins can start a release."
+            exit 1
+          fi
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Check the version
+        id: plan
+        env:
+          BRANCH: ${{ steps.guard.outputs.branch }}
+          VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          .github/scripts/release-plan.sh
+          echo "This run releases the samples $VERSION." >> "$GITHUB_STEP_SUMMARY"
+
+  # Every sample, with CucumberSwift checked out at the release's version.
+  test:
+    name: ${{ matrix.sample }} with CucumberSwift ${{ needs.plan.outputs.version }}
+    needs: plan
+    if: ${{ !inputs.dry_run }}
+    runs-on: macos-15
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: true
+      matrix:
+        sample: ${{ fromJSON(needs.plan.outputs.samples) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: cucumberswift/CucumberSwift
+          ref: refs/tags/${{ needs.plan.outputs.version }}
+          path: build/CucumberSwift
+          persist-credentials: false
+      - name: Show the toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+      - name: Install mise
+        run: command -v mise || brew install mise
+      - name: Install the pinned Tuist
+        env:
+          # mise verifies the download's checksum through the GitHub API.
+          GITHUB_TOKEN: ${{ github.token }}
+          MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
+        run: |
+          mise --version
+          mise install
+      - name: Test ${{ matrix.sample }}
+        env:
+          MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
+          CUCUMBER_SWIFT_PATH: ${{ github.workspace }}/build/CucumberSwift
+          SAMPLE: ${{ matrix.sample }}
+        run: mise run test "$SAMPLE"
+
+  # DocC runs no sample code here, and needs no macOS runner. It builds twice, because
+  # DocC bakes the hosting path into its output: once for /CucumberSwiftSample/X.x/ and
+  # once for /CucumberSwiftSample/. The docs job decides which releases go where.
+  docs-build:
+    name: Build the documentation
+    needs: plan
+    if: ${{ !inputs.dry_run }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Build the docs for the release
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: .github/scripts/build-docs.sh "$GITHUB_WORKSPACE/docs" "$VERSION"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: docs
+          path: |
+            docs/docs-major.zip
+            docs/docs-root.zip
+          if-no-files-found: error
+          retention-days: 1
+
+  # The only job that writes: the tag and the release, on the commit that was tested.
+  # It runs no project code: only gh.
+  release:
+    name: Create the release
+    needs: [plan, test, docs-build]
+    if: ${{ !inputs.dry_run }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: release
+    # contents: write -> the tag and the release, in this repository only.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: docs
+      # Assets go in the same call: releases are immutable once published.
+      - name: Create the tag and the release
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
+          LATEST: ${{ needs.plan.outputs.latest }}
+          RELEASE_SHA: ${{ github.sha }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create "$VERSION" docs-major.zip docs-root.zip \
+            --target "$RELEASE_SHA" \
+            --title "Release $VERSION" \
+            --notes "Samples for CucumberSwift $VERSION: every sample is built and tested with that version. Documentation: https://cucumberswift.org/CucumberSwiftSample/${VERSION%%.*}.x/documentation/cucumberswiftsample/" \
+            --generate-notes \
+            --latest="$LATEST"
+          echo "Released the samples $VERSION." >> "$GITHUB_STEP_SUMMARY"
+
+  # Publishes the docs of every release, including this one. Last, so a failure here
+  # leaves the release as it is. To publish again, run Docs by hand.
+  docs:
+    needs: [plan, release]
+    if: ${{ !inputs.dry_run }}
+    # What docs.yml needs. contents: read -> releases. pages, id-token -> deploy.
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/docs.yml
+    with:
+      version: ${{ needs.plan.outputs.version }}
+      latest: ${{ needs.plan.outputs.latest }}
