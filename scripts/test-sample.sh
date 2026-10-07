@@ -93,11 +93,23 @@ test_sample() {
 
     echo "::group::$label: test"
     local xcodebuild_status=0
-    # -skipMacroValidation: Xcode asks before it runs a package's macros the first time, and
-    # xcodebuild cannot ask, so it would refuse to build a sample that uses them.
+    # -skipMacroValidation and -skipPackagePluginValidation: Xcode asks before it runs a
+    # package's macros or plugins the first time, and xcodebuild cannot ask, so it would refuse
+    # to build a sample that uses them. Every sample uses the CucumberSwiftLint plugin.
     xcodebuild test -project "$dir/$sample.xcodeproj" -scheme "$sample" ${plan_args[@]+"${plan_args[@]}"} \
-      -destination 'platform=macOS' -skipMacroValidation -resultBundlePath "$bundle" 2>&1 | tee "$log" || xcodebuild_status=$?
+      -destination 'platform=macOS' -skipMacroValidation -skipPackagePluginValidation -resultBundlePath "$bundle" 2>&1 | tee "$log" || xcodebuild_status=$?
     echo "::endgroup::"
+
+    # The samples stay clean, so a warning from CucumberSwiftLint fails the sample. It prints
+    # them under its build step, "Checking feature files in <target>", which ends at a blank line.
+    local lint_warnings
+    lint_warnings=$(awk '/^PhaseScriptExecution Checking\\ feature\\ files\\ in/ { checking = 1; next }
+      checking && /^$/ { checking = 0 }
+      checking && /: warning: / { print }' "$log")
+    if [ -n "$lint_warnings" ]; then
+      echo "::error::$label: CucumberSwiftLint reported warnings:"$'\n'"$lint_warnings"
+      status=1
+    fi
 
     if [ ! -d "$bundle" ]; then
       echo "::error::$label: xcodebuild exited with $xcodebuild_status and left no test results"

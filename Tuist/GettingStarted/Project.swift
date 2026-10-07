@@ -3,9 +3,9 @@ import ProjectDescription
 // The smallest working CucumberSwift setup: one macOS unit test bundle that runs the
 // feature files in Tests/Features.
 //
-// The sample depends on the latest CucumberSwift release. To build it against a local
-// CucumberSwift checkout instead, set CUCUMBER_SWIFT_PATH and generate through mise,
-// from anywhere in this repository:
+// The sample depends on the latest CucumberSwift release, from 6.4.0, the first with the
+// CucumberSwiftLint plugin. To build it against a local CucumberSwift checkout instead, set
+// CUCUMBER_SWIFT_PATH and generate through mise, from anywhere in this repository:
 //
 //     CUCUMBER_SWIFT_PATH=~/src/CucumberSwift mise run generate
 //
@@ -14,7 +14,7 @@ import ProjectDescription
 let cucumberSwift: Package = {
     let path = Environment.cucumberSwiftPath.getString(default: "")
     guard path.isEmpty else { return .local(path: .path(path)) }
-    return .remote(url: "https://github.com/cucumberswift/CucumberSwift", requirement: .upToNextMajor(from: "6.3.0"))
+    return .remote(url: "https://github.com/cucumberswift/CucumberSwift", requirement: .upToNextMajor(from: "6.4.0"))
 }()
 
 let project = Project(
@@ -32,7 +32,12 @@ let project = Project(
             // A folder reference keeps the feature files in a "Features" folder inside the
             // test bundle, where CucumberSwift looks for them.
             resources: [.folderReference(path: "Tests/Features")],
-            dependencies: [.package(product: "CucumberSwift")],
+            dependencies: [
+                .package(product: "CucumberSwift"),
+                // CucumberSwiftLint checks the feature files on every build, and shows each problem as
+                // a warning. See README.md.
+                .package(product: "CucumberSwiftLint", type: .plugin),
+            ],
             settings: .settings(base: [
                 "SWIFT_VERSION": "6.0",
                 // Lets the sample build and run without a signing team.

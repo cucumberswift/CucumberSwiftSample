@@ -48,6 +48,14 @@ From the command line, `mise run test ParallelTesting` generates the project and
 test plans. It fails unless both run the same number of tests and the `Parallel` test plan
 runs them in more than one worker.
 
+## Check the feature files as you build
+
+`Project.swift` adds CucumberSwift's `CucumberSwiftLint` plugin to the test target, so each
+build checks the feature files and shows each problem as a warning at its line, such as a
+misspelt keyword or a step that no step definition matches. It has no warnings for this sample. Keep it on in CI too,
+with `-skipPackagePluginValidation`: see
+[GettingStarted](../GettingStarted/README.md#check-the-feature-files-as-you-build).
+
 ## Turn it on in your own project
 
 Both of these, for the test target that runs your feature files:
