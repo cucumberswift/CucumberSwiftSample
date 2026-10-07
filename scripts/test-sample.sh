@@ -58,7 +58,11 @@ test_sample() {
   echo "::group::$sample: generate"
   # set -e does not apply here: the function runs as `test_sample … || overall=1`. So each
   # step that can fail returns or sets status itself, rather than test a stale project.
-  if ! tuist generate --no-open --path "$dir"; then
+  # TUIST_DEVELOPER_DIR, when set, is the Xcode that generates the project, for when the Xcode
+  # that builds and tests it (DEVELOPER_DIR) is older than the pinned Tuist supports.
+  local generate=(tuist generate --no-open --path "$dir")
+  [ -z "${TUIST_DEVELOPER_DIR:-}" ] || generate=(env DEVELOPER_DIR="$TUIST_DEVELOPER_DIR" "${generate[@]}")
+  if ! "${generate[@]}"; then
     echo "::endgroup::"
     echo "::error::$sample: tuist generate failed"
     return 1
@@ -89,8 +93,10 @@ test_sample() {
 
     echo "::group::$label: test"
     local xcodebuild_status=0
+    # -skipMacroValidation: Xcode asks before it runs a package's macros the first time, and
+    # xcodebuild cannot ask, so it would refuse to build a sample that uses them.
     xcodebuild test -project "$dir/$sample.xcodeproj" -scheme "$sample" ${plan_args[@]+"${plan_args[@]}"} \
-      -destination 'platform=macOS' -resultBundlePath "$bundle" 2>&1 | tee "$log" || xcodebuild_status=$?
+      -destination 'platform=macOS' -skipMacroValidation -resultBundlePath "$bundle" 2>&1 | tee "$log" || xcodebuild_status=$?
     echo "::endgroup::"
 
     if [ ! -d "$bundle" ]; then

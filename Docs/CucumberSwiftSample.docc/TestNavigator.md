@@ -8,7 +8,7 @@ How your scenarios read in Xcode's test navigator and test report: test names as
 |---|---|
 | Platform | macOS |
 | Test target | A unit test bundle, `TestNavigatorTests`, with a macOS 14.0 deployment target, built in Swift 6 language mode, and three test plans |
-| Xcode | 16 or later |
+| Xcode | 16.3 or later |
 | CucumberSwift | The latest 6.x release, 6.3.0 or later |
 | Source | [`Tuist/TestNavigator`](https://github.com/cucumberswift/CucumberSwiftSample/tree/main/Tuist/TestNavigator) |
 | README | [TestNavigator's README](https://github.com/cucumberswift/CucumberSwiftSample/blob/main/Tuist/TestNavigator/README.md) |
@@ -50,7 +50,7 @@ Choose one in the menu at the top of the test navigator, or pass `-testPlan Smok
 
 ### Run it
 
-From the repository root, with Xcode 16 or later and mise:
+From the repository root, with Xcode 16.3 or later and mise:
 
 ```bash
 mise install
