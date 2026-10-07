@@ -62,6 +62,13 @@ If the trait is not on, the macros do not exist, and each one is an error:
 'Given' is unavailable: Turn on CucumberSwift's Macros package trait to use the step definition macros. In an Xcode project, that needs Xcode 26.4 or later.
 ```
 
+## Check the feature files as you build
+
+`Project.swift` adds CucumberSwift's `CucumberSwiftLint` plugin to the test target, so each
+build checks the feature files and shows each problem as a warning at its line. Keep it on in
+CI too, with `-skipPackagePluginValidation`: see
+[GettingStarted](../GettingStarted/README.md#check-the-feature-files-as-you-build).
+
 ## Turn on the macros in your own project
 
 The macros are the `CucumberSwiftMacros` library, which CucumberSwift only builds when its
