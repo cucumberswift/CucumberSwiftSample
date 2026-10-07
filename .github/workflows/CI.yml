@@ -1,7 +1,9 @@
 name: CI
 
-# Builds and tests every sample in Tuist/ twice: with the CucumberSwift that its
-# Project.swift asks for (normally the latest release), and with CucumberSwift's main.
+# Builds and tests every sample in Tuist/ and Bazel/ twice: with the CucumberSwift that its
+# Project.swift or MODULE.bazel asks for (normally the latest release), and with
+# CucumberSwift's main. scripts/test-sample.sh runs a Bazel sample with `bazel test`, which on
+# the runner is Bazelisk.
 # Nightly runs catch a CucumberSwift change that breaks a sample.
 #
 # A sample can ask for a CucumberSwift version that is not released yet. Its "release" job
@@ -39,7 +41,8 @@ jobs:
           persist-credentials: false
       - id: list
         run: |
-          samples=$(find Tuist -mindepth 2 -maxdepth 2 -name Project.swift | cut -d/ -f2 | sort | jq -R . | jq -sc .)
+          samples=$({ find Tuist -mindepth 2 -maxdepth 2 -name Project.swift; find Bazel -mindepth 2 -maxdepth 2 -name MODULE.bazel; } |
+            cut -d/ -f2 | sort | jq -R . | jq -sc .)
           echo "Samples: $samples"
           echo "samples=$samples" >> "$GITHUB_OUTPUT"
 
@@ -62,7 +65,7 @@ jobs:
       fail-fast: false
       matrix:
         sample: ${{ fromJSON(needs.samples.outputs.samples) }}
-        # "release" is the dependency each Project.swift declares: the latest release.
+        # "release" is the dependency each Project.swift or MODULE.bazel declares: the latest release.
         cucumber-swift: [release, main]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

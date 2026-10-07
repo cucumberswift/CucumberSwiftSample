@@ -85,6 +85,14 @@ reviews:
         settings or files that its README.md does not describe, and a README that no longer
         matches the code. A scenario that fails on purpose must be explained in the
         sample's README and listed in expected_failures in scripts/test-sample.sh.
+    - path: "Bazel/**"
+      instructions: >-
+        Each folder in Bazel/ is a Bazel module that users copy as a starting point, so it
+        must work on its own and read as an example of good practice. Its MODULE.bazel adds
+        cucumberswift and cucumberswift_expressions with bazel_dep and a git_override to
+        each release tag. Step definitions use Cucumber Expressions and typed parameters.
+        Flag a change that the sample's README.md does not describe, and a README that no
+        longer matches MODULE.bazel or BUILD.bazel.
     - path: "scripts/**"
       instructions: >-
         Runs on macOS's bash 3.2 as well as in CI. Flag anything that could report a

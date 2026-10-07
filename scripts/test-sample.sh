@@ -1,10 +1,12 @@
 #!/bin/bash
-# Builds and tests one sample, or every sample in Tuist/ when no name is given:
+# Builds and tests one sample, or every sample in Tuist/ and Bazel/ when no name is given:
 #
 #     scripts/test-sample.sh [SampleName]
 #
+# A sample in Bazel/ is tested with `bazel test //...` (see test_bazel_sample below).
+#
 # Runs through mise (`mise run test [SampleName]`), which provides the pinned Tuist and
-# passes CUCUMBER_SWIFT_PATH on to the manifests. For each sample it generates the
+# passes CUCUMBER_SWIFT_PATH on to the manifests. For each Tuist sample it generates the
 # project, then runs every test plan in the sample's scheme, or the scheme's tests if it
 # has no test plans. A test plan passes when every failed test is one the sample fails
 # on purpose (see expected_failures below), and the sample's default test plan fails each
@@ -180,14 +182,76 @@ test_sample() {
   return "$status"
 }
 
+# A sample in Bazel/: runs every test target in its module with Bazelisk (`bazel`), which
+# runs the Bazel version in the sample's .bazelversion. With CUCUMBER_SWIFT_PATH set, the
+# cucumberswift module comes from that checkout instead of the git_override in
+# MODULE.bazel. A test target passes when Bazel reports it passed and it ran at least one
+# test: a bundle with no Features folder runs no scenario and still passes.
+#
+# An iOS test runs on a simulator of the newest iOS runtime installed. rules_apple otherwise
+# looks for the runtime of the Xcode's SDK, which a machine need not have: the macos-15 image
+# has no iOS 18.4 runtime for Xcode 16.3, and a runtime updated on its own (26.3.1 for
+# Xcode 26.2's SDK) doesn't match either.
+test_bazel_sample() {
+  local sample=$1
+  local dir="$repo_root/Bazel/$sample"
+  local status=0
+  local override=()
+  [ -z "${CUCUMBER_SWIFT_PATH:-}" ] || override=(--override_module=cucumberswift="$CUCUMBER_SWIFT_PATH")
+  local runtime
+  runtime=$(xcrun simctl list runtimes -j 2>/dev/null | python3 -c 'import json, sys
+runtimes = [r["version"] for r in json.load(sys.stdin)["runtimes"] if r.get("platform") == "iOS" and r.get("isAvailable")]
+print(max(runtimes, key=lambda v: [int(p) for p in v.split(".")]) if runtimes else "")' || true)
+  local test_args=()
+  [ -z "$runtime" ] || test_args=(--ios_simulator_version="$runtime")
+
+  echo "::group::$sample: test"
+  local bazel_status=0
+  (cd "$dir" && bazel test //... ${override[@]+"${override[@]}"} ${test_args[@]+"${test_args[@]}"}) 2>&1 | tee "$results_dir/$sample.log" || bazel_status=$?
+  echo "::endgroup::"
+  if [ "$bazel_status" -ne 0 ]; then
+    echo "::error::$sample: bazel test exited with $bazel_status"
+    status=1
+  fi
+
+  local targets
+  if ! targets=$(cd "$dir" && bazel query 'tests(//...)' ${override[@]+"${override[@]}"} 2>/dev/null) || [ -z "$targets" ]; then
+    echo "::error::$sample: could not list its test targets"
+    return 1
+  fi
+  local testlogs
+  testlogs=$(cd "$dir" && bazel info bazel-testlogs ${override[@]+"${override[@]}"} 2>/dev/null)
+  local target
+  for target in $targets; do
+    local name=${target#//:}
+    # XCTest's last summary line counts every test in the bundle ("All tests").
+    local count
+    count=$(grep -Eo 'Executed [0-9]+ tests?' "$testlogs/$name/test.log" 2>/dev/null | tail -1 | grep -Eo '[0-9]+' || true)
+    if [ "${count:-0}" -eq 0 ]; then
+      echo "::error::$sample ($name): no tests ran"
+      status=1
+    else
+      echo "$sample ($name): ran $count tests"
+    fi
+  done
+  [ "$status" -ne 0 ] || echo "$sample: passed"
+  return "$status"
+}
+
 samples=("$@")
 if [ ${#samples[@]} -eq 0 ] || [ -z "${samples[0]}" ]; then
   samples=()
-  for dir in "$repo_root"/Tuist/*/; do samples+=("$(basename "$dir")"); done
+  for dir in "$repo_root"/Tuist/*/ "$repo_root"/Bazel/*/; do
+    [ -d "$dir" ] && samples+=("$(basename "$dir")")
+  done
 fi
 
 overall=0
 for sample in "${samples[@]}"; do
-  test_sample "$sample" || overall=1
+  if [ -f "$repo_root/Bazel/$sample/MODULE.bazel" ]; then
+    test_bazel_sample "$sample" || overall=1
+  else
+    test_sample "$sample" || overall=1
+  fi
 done
 exit "$overall"

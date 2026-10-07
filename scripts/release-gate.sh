@@ -3,8 +3,9 @@
 #
 #     scripts/release-gate.sh SampleName
 #
-# A sample's Project.swift asks for a CucumberSwift version. When CucumberSwift has not
-# released that version, SwiftPM cannot resolve it, so the release job skips the sample
+# A sample's Project.swift, or a Bazel sample's MODULE.bazel, asks for a CucumberSwift
+# version. When CucumberSwift has not released that version, SwiftPM or Bazel cannot fetch
+# it, so the release job skips the sample
 # (the main job still tests it) instead of failing. This script reads the oldest version
 # the manifest asks for, compares it with the highest stable release of CucumberSwift,
 # and writes `build=true` or `build=false`. It prints a notice naming both versions when it
@@ -24,18 +25,31 @@ repo_root=$(cd "$(dirname "$0")/.." && pwd)
 output=${GITHUB_OUTPUT:-/dev/stdout}
 sample=${1:?usage: release-gate.sh SampleName}
 manifest="$repo_root/Tuist/$sample/Project.swift"
-[ -f "$manifest" ] || { echo "::error::$sample: no $manifest"; exit 1; }
+[ -f "$manifest" ] || manifest="$repo_root/Bazel/$sample/MODULE.bazel"
+[ -f "$manifest" ] || { echo "::error::$sample: no Tuist/$sample/Project.swift or Bazel/$sample/MODULE.bazel"; exit 1; }
 
-# The requirements of CucumberSwift's own dependency declarations, as "kind version" lines: kind is
+# The requirements of CucumberSwift's own dependency declarations, as "kind version" lines. In a
+# Project.swift, kind is
 # `from` for `from: "6.3.0"` (which covers `.upToNextMajor(from:)` and `.upToNextMinor(from:)`)
 # and `exact` for `exact: "6.3.0"` and `.exact("6.3.0")`. Comments are dropped first: `/* … */`
 # blocks, and a `//` that starts the line or follows a space (the one in `https://` stays). The lines are then
 # joined, so the URL and its requirement can sit on different lines, and each declaration is read up
 # to its first `)`. A declaration of another package (CucumberSwiftExpressions) is not counted.
+if [ "$(basename "$manifest")" = MODULE.bazel ]; then
+  # A Bazel sample: `bazel_dep(name = "cucumberswift", version = "6.4.0")`, whose
+  # git_override fetches the release tag. Bazel takes a bazel_dep's version as the
+  # lowest it accepts, so it counts as `from`, like SwiftPM's `from:`. `#` comments are
+  # dropped first, and cucumberswift_expressions is not counted.
+  requirements=$(sed 's/#.*//' "$manifest" | tr '\n' ' ' |
+    grep -oE 'bazel_dep\([^)]*name[[:space:]]*=[[:space:]]*"cucumberswift"[^)]*\)' |
+    grep -oE 'version[[:space:]]*=[[:space:]]*"[0-9]+\.[0-9]+\.[0-9]+"' |
+    sed -E 's/.*"([0-9.]+)"$/from \1/' | sort -k2,2V || true)
+else
 requirements=$(perl -0pe 's{/\*.*?\*/}{}gs; s{(^|\s)//[^\n]*}{}gm; tr/\n/ /' "$manifest" |
   grep -oiE '/cucumberswift(\.git)?"[^)]*\)' |
   grep -oE '(from:|exact:|\.exact\()[[:space:]]*"[0-9]+\.[0-9]+\.[0-9]+"' |
   sed -E 's/^from:.*"([0-9.]+)"$/from \1/; s/^(exact:|\.exact\().*"([0-9.]+)"$/exact \2/' | sort -k2,2V || true)
+fi
 
 if [ -n "${REQUIREMENTS_ONLY:-}" ]; then
   [ -z "$requirements" ] || echo "$requirements"
@@ -43,7 +57,7 @@ if [ -n "${REQUIREMENTS_ONLY:-}" ]; then
 fi
 
 if [ -z "$requirements" ]; then
-  echo "$sample asks for no CucumberSwift version in its Project.swift, so the release job builds it."
+  echo "$sample asks for no CucumberSwift version in $(basename "$manifest"), so the release job builds it."
   echo build=true >>"$output"
   exit 0
 fi
