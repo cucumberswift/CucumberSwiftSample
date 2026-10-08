@@ -14,7 +14,7 @@ The samples are built and tested on every change and every night, against the la
 
 ### How the samples are built
 
-[Tuist](https://tuist.dev) generates each sample's Xcode project from its `Project.swift`, so the repository holds the manifest and the sources, not an `.xcodeproj`. [mise](https://mise.jdx.dev) installs the Tuist version that `.mise.toml` pins.
+[Tuist](https://tuist.dev) generates each sample's Xcode project from its `Project.swift`, so the repository holds the manifest and the sources, not an `.xcodeproj`. [mise](https://mise.jdx.dev) installs the Tuist version that `.mise.toml` pins. <doc:BazelModule>, in `Bazel/`, is a Bazel module instead, built and tested with `bazel test`.
 
 ### Run a sample
 
@@ -50,10 +50,11 @@ CUCUMBER_SWIFT_PATH=~/src/CucumberSwift mise run generate
 | <doc:TestNavigator> | How scenarios read in Xcode's test navigator: readable test names, failures at the feature file's line, Scenario Outline examples, skipped scenarios, a test plan per tag | macOS unit test bundle | 16.3 or later | 6.4.0 or later |
 | <doc:StepDefinitionMacros> | Step definitions written as macros, `#Given`, `#When` and `#Then`, checked when they compile: typed closure arguments, the `Step` argument, a localized macro, and the compiler's errors and fixes | macOS unit test bundle | 16.3 or later | 6.4.0 or later |
 | <doc:ParallelTesting> | Scenarios run side by side with Xcode's parallel testing, through CucumberSwift's experimental parallel testing setting, with a serial test plan to compare | macOS unit test bundle | 16.3 or later | 6.4.0 or later |
+| <doc:BazelModule> | CucumberSwift in a Bazel project: one test target, one feature file, its step definitions, with `bazel_dep` and `git_override` | Bazel `macos_unit_test` and `ios_unit_test` | 16.3 or later | 6.4.0 or later |
 
 ### Add CucumberSwift to your own project
 
-CucumberSwift's step-by-step tutorials set up a test target from scratch, with [Swift Package Manager](https://cucumberswift.org/CucumberSwift/tutorials/cucumberswift/spm-step-by-step/) or [Carthage](https://cucumberswift.org/CucumberSwift/tutorials/cucumberswift/carthage-step-by-step/). <doc:GettingStarted> is a working, tested setup to compare yours with.
+CucumberSwift's step-by-step tutorials set up a test target from scratch, with [Swift Package Manager](https://cucumberswift.org/CucumberSwift/tutorials/cucumberswift/spm-step-by-step/) or [Carthage](https://cucumberswift.org/CucumberSwift/tutorials/cucumberswift/carthage-step-by-step/). <doc:GettingStarted> is a working, tested setup to compare yours with, and <doc:BazelModule> is one for a Bazel project.
 
 ## Topics
 
@@ -63,3 +64,4 @@ CucumberSwift's step-by-step tutorials set up a test target from scratch, with [
 - <doc:TestNavigator>
 - <doc:StepDefinitionMacros>
 - <doc:ParallelTesting>
+- <doc:BazelModule>

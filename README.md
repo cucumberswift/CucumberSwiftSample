@@ -15,6 +15,7 @@ sample's README.
 | [TestNavigator](Tuist/TestNavigator/README.md) | How scenarios read in Xcode's test navigator: readable test names, failures at the feature file's line, Scenario Outline examples, skipped scenarios, a test plan per tag | 6.4.0 or later |
 | [StepDefinitionMacros](Tuist/StepDefinitionMacros/README.md) | Step definitions written as macros, `#Given`, `#When` and `#Then`, checked when they compile: typed closure arguments, the `Step` argument, a localized macro, and the compiler's errors and fixes | 6.4.0 or later |
 | [ParallelTesting](Tuist/ParallelTesting/README.md) | Scenarios run side by side with Xcode's parallel testing, through CucumberSwift's experimental parallel testing setting, with a serial test plan to compare | 6.4.0 or later |
+| [BazelModule](Bazel/BazelModule/README.md) | CucumberSwift in a Bazel project: one test target, one feature file, its step definitions, with `bazel_dep` and `git_override` | 6.4.0 or later |
 
 A sample's "CucumberSwift" column can name a version that CucumberSwift hasn't released yet, for a
 feature that ships with that release. Such a sample builds only against a CucumberSwift
@@ -42,6 +43,8 @@ open Tuist/GettingStarted/GettingStarted.xcodeproj
 ```
 
 `mise run test` builds and tests every sample, and `mise run test GettingStarted` tests one.
+[BazelModule](Bazel/BazelModule/README.md) is a Bazel module, not an Xcode project: it needs
+[Bazelisk](https://github.com/bazelbuild/bazelisk), and runs with `bazel test //...` in its folder.
 Each sample's README says how to copy it into a project of your own.
 
 To get the samples as they were tested with one CucumberSwift release, check out the samples
@@ -52,7 +55,8 @@ release with the same version, such as `git checkout 6.3.0`, before you generate
 
 CucumberSwift's step-by-step tutorials set up a test target from scratch, with
 [Swift Package Manager](https://cucumberswift.org/CucumberSwift/tutorials/cucumberswift/spm-step-by-step/) or [Carthage](https://cucumberswift.org/CucumberSwift/tutorials/cucumberswift/carthage-step-by-step/).
-[GettingStarted](Tuist/GettingStarted/README.md) is a working, tested setup to compare yours with.
+[GettingStarted](Tuist/GettingStarted/README.md) is a working, tested setup to compare yours with,
+and [BazelModule](Bazel/BazelModule/README.md) is one for a Bazel project.
 
 ## Use a local CucumberSwift checkout
 

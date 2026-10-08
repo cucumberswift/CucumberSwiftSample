@@ -1,0 +1,38 @@
+load("@rules_apple//apple:ios.bzl", "ios_unit_test")
+load("@rules_apple//apple:macos.bzl", "macos_unit_test")
+load("@rules_apple//apple:resources.bzl", "apple_resource_group")
+load("@rules_swift//swift:swift_library.bzl", "swift_library")
+
+# `bazel test //...` runs the scenarios on macOS (BazelModuleTests) and on an iOS
+# simulator (BazelModuleTests_iOS).
+
+# CucumberSwift looks for a Features folder at the root of the test bundle. Stripping
+# "Tests" puts Tests/Features there as Features.
+apple_resource_group(
+    name = "Features",
+    strip_structured_resources_prefixes = ["Tests"],
+    structured_resources = glob(["Tests/Features/**"]),
+)
+
+# The step definitions. testonly, because CucumberSwift links XCTest.
+swift_library(
+    name = "StepDefinitions",
+    testonly = True,
+    srcs = glob(["Tests/**/*.swift"]),
+    copts = ["-swift-version", "6"],
+    data = [":Features"],
+    module_name = "BazelModuleTests",
+    deps = ["@cucumberswift//:CucumberSwift"],
+)
+
+macos_unit_test(
+    name = "BazelModuleTests",
+    minimum_os_version = "14.0",
+    deps = [":StepDefinitions"],
+)
+
+ios_unit_test(
+    name = "BazelModuleTests_iOS",
+    minimum_os_version = "17.0",
+    deps = [":StepDefinitions"],
+)

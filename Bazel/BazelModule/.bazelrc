@@ -1,0 +1,4 @@
+# The iOS test runs on a simulator that rules_apple creates and boots. The first boot of a
+# new simulator can take minutes, so give the tests longer than the default 300 seconds.
+test --test_timeout=900
+test --test_output=errors

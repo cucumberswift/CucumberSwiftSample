@@ -32,7 +32,8 @@ this repository.
 
 1. **Create `Tuist/<SampleName>/`**, named in PascalCase after what it shows, such as
    `AsyncSteps` or `Hooks`. A sample that needs only Swift Package Manager, with no Xcode
-   project, goes in `SwiftPM/<SampleName>/` instead.
+   project, goes in `SwiftPM/<SampleName>/` instead, and a Bazel module in
+   `Bazel/<SampleName>/` (see [Bazel samples](#bazel-samples)).
 2. **Add `Tuist.swift` and `Project.swift`.** Start from
    [GettingStarted](Tuist/GettingStarted). Keep its `cucumberSwift` package: it depends
    on the latest CucumberSwift release, and switches to `CUCUMBER_SWIFT_PATH` when that is
@@ -65,12 +66,29 @@ this repository.
    tests in more than one worker, and every test plan in the sample runs the same number of
    tests.
 
-CI finds every folder in `Tuist/` that has a `Project.swift`, so a new sample needs no
-workflow change. It is tested on each pull request, and every night against the latest
+CI finds every folder in `Tuist/` that has a `Project.swift`, and every folder in `Bazel/`
+that has a `MODULE.bazel`, so a new sample needs no workflow change. It is tested on each pull request, and every night against the latest
 CucumberSwift release and CucumberSwift's `main`. A sample that asks for a CucumberSwift
 version that isn't released yet is tested only against `main`: `scripts/release-gate.sh` reads
 the oldest version its `Project.swift` asks for, and the release job skips the sample, with a
 notice, until CucumberSwift releases that version.
+
+### Bazel samples
+
+A Bazel sample is a Bazel module in `Bazel/<SampleName>/`, run from its folder with
+[Bazelisk](https://github.com/bazelbuild/bazelisk) installed as `bazel`. Start from
+[BazelModule](Bazel/BazelModule). The steps above apply, except for Tuist:
+
+- **`MODULE.bazel` replaces `Project.swift`.** It adds CucumberSwift with `bazel_dep` and a
+  `git_override` to the release tag, as BazelModule's does; the version in `bazel_dep` is
+  the one the release gate reads. Pin Bazel in `.bazelversion`. `MODULE.bazel.lock` and the
+  `bazel-*` links are not committed.
+- **`mise run test <SampleName>` runs `bazel test //...`** in the folder, with
+  `--override_module=cucumberswift=$CUCUMBER_SWIFT_PATH` when that is set, and fails unless
+  every test target passed and ran at least one test. An iOS test runs on a simulator of the
+  newest iOS runtime installed.
+- **Every test target runs in CI**, in the sample's job. An `ios_unit_test` boots a
+  simulator there, which adds about a minute.
 
 ## The documentation
 

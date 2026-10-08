@@ -12,7 +12,7 @@
 #   - this repository has no tag VERSION yet;
 #   - on main, VERSION is higher than every samples release; on support/N.x, its major
 #     is N and it is higher than every N.x samples release;
-#   - every sample in Tuist/ asks for CucumberSwift VERSION's major, at VERSION or lower,
+#   - every sample in Tuist/ and Bazel/ asks for CucumberSwift VERSION's major, at VERSION or lower,
 #     or for exactly VERSION;
 #   - the overview's subtitle says "for CucumberSwift N.x", with VERSION's major.
 #
@@ -64,11 +64,12 @@ fi
 
 # 4. Every sample works with this version: it asks for this major, and nothing newer.
 samples=()
-for manifest in "$repo_root"/Tuist/*/Project.swift; do
+for manifest in "$repo_root"/Tuist/*/Project.swift "$repo_root"/Bazel/*/MODULE.bazel; do
+  [ -f "$manifest" ] || continue
   sample=$(basename "$(dirname "$manifest")")
   samples+=("$sample")
   requirements=$(REQUIREMENTS_ONLY=1 "$repo_root/scripts/release-gate.sh" "$sample")
-  [ -n "$requirements" ] || fail "$sample asks for no CucumberSwift version in its Project.swift."
+  [ -n "$requirements" ] || fail "$sample asks for no CucumberSwift version in its $(basename "$manifest")."
   while read -r kind required; do
     if [ "$kind" = exact ]; then
       [ "$required" = "$version" ] || fail "$sample asks for exactly CucumberSwift $required, not $version."
@@ -79,7 +80,7 @@ for manifest in "$repo_root"/Tuist/*/Project.swift; do
     fi
   done <<<"$requirements"
 done
-[ ${#samples[@]} -gt 0 ] || fail "There is no sample in Tuist/."
+[ ${#samples[@]} -gt 0 ] || fail "There is no sample in Tuist/ or Bazel/."
 
 # 5. The subtitle names the major: the first paragraph after the title.
 subtitle=$(awk 'NR > 1 && NF { print; exit }' "$overview")
