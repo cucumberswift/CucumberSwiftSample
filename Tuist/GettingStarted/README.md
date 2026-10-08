@@ -3,7 +3,8 @@
 The smallest working CucumberSwift setup: a macOS unit test bundle that runs one feature
 file.
 
-**CucumberSwift version:** the latest 6.x release (6.3.0 or later).
+**CucumberSwift version:** the latest 6.x release (6.4.0 or later, the first with the
+`CucumberSwiftLint` plugin).
 
 [GettingStarted in the documentation](https://cucumberswift.org/CucumberSwiftSample/documentation/cucumberswiftsample/gettingstarted/) says what it shows, its platform and test target, and the Xcode and CucumberSwift it needs.
 
@@ -39,6 +40,20 @@ run, because CucumberSwift creates the tests when the bundle starts.
 
 From the command line, `mise run test GettingStarted` generates the project and runs its
 tests.
+
+## Check the feature files as you build
+
+`Project.swift` adds CucumberSwift's `CucumberSwiftLint` plugin to the test target. Each build
+checks the feature files, and the steps in them against the step definitions, and shows each
+problem as a warning at its line: a misspelt keyword, a table row with a cell too many, a doc
+string that is never closed, or a step that no step definition matches. It never fails a build,
+and this sample has no warnings. The first time you build, Xcode asks you to trust the plugin:
+choose **Trust & Enable**.
+
+Keep it on in CI too, so every CI build checks the feature files. `xcodebuild` can't ask, so
+pass it `-skipPackagePluginValidation`, as this repository's `scripts/test-sample.sh` does; the
+script also fails a sample if the plugin warns. [Checking Feature Files While You Build](https://cucumberswift.org/CucumberSwift/documentation/cucumberswift/checking-feature-files)
+lists everything the plugin checks, and its limits.
 
 ## Write the steps for a new scenario
 
@@ -85,6 +100,8 @@ or [with Carthage](https://cucumberswift.org/CucumberSwift/tutorials/cucumberswi
    reference (blue folder) so it is copied into the test bundle as a folder.
 3. Copy `Tests/StepDefinitions.swift` into the test target and replace the steps with
    your own.
+4. Add the `CucumberSwiftLint` plugin to the test target: under its **Build Phases**, expand
+   **Run Build Tool Plug-ins**, click **+** and choose **CucumberSwiftLint**.
 
 To try the sample with a local CucumberSwift checkout instead of the release, set
 `CUCUMBER_SWIFT_PATH` to its absolute path: `CUCUMBER_SWIFT_PATH=~/src/CucumberSwift mise run generate`.

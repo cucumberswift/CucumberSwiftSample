@@ -4,11 +4,9 @@ How your scenarios read in Xcode's test navigator and test report: test names as
 wrote them, failures at the feature file's line, Scenario Outline examples, skipped
 scenarios, and a test plan per tag.
 
-**CucumberSwift version:** the latest 6.x release, 6.3.0 or later. 6.3.0 added these
-features ([cucumberswift/CucumberSwift#253](https://github.com/cucumberswift/CucumberSwift/pull/253)).
-With 6.2.0 the sample
-builds and runs, but its tests are named in camel case, its failure is reported in
-`StepDefinitions.swift`, and the skipped scenario fails instead.
+**CucumberSwift version:** the latest 6.x release, 6.4.0 or later, the first with the
+`CucumberSwiftLint` plugin. 6.3.0 added the features it shows
+([cucumberswift/CucumberSwift#253](https://github.com/cucumberswift/CucumberSwift/pull/253)).
 
 [TestNavigator in the documentation](https://cucumberswift.org/CucumberSwiftSample/documentation/cucumberswiftsample/testnavigator/) says what it shows, its platform and test target, and the Xcode and CucumberSwift it needs.
 
@@ -80,6 +78,15 @@ CucumberSwift creates the tests when the bundle starts.
 
 From the command line, `mise run test TestNavigator` generates the project and runs each
 test plan, checking that only the failing scenario fails.
+
+## Check the feature files as you build
+
+`Project.swift` adds CucumberSwift's `CucumberSwiftLint` plugin to the test target, so each
+build checks the feature files and shows each problem as a warning at its line, such as a
+misspelt keyword or a step that no step definition matches. The failing and skipped scenarios fail when the tests run, not when they build, so it
+has no warnings for them. Keep it on in CI too,
+with `-skipPackagePluginValidation`: see
+[GettingStarted](../GettingStarted/README.md#check-the-feature-files-as-you-build).
 
 ## Copy it into a project of your own
 

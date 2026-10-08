@@ -9,11 +9,11 @@ How your scenarios read in Xcode's test navigator and test report: test names as
 | Platform | macOS |
 | Test target | A unit test bundle, `TestNavigatorTests`, with a macOS 14.0 deployment target, built in Swift 6 language mode, and three test plans |
 | Xcode | 16.3 or later |
-| CucumberSwift | The latest 6.x release, 6.3.0 or later |
+| CucumberSwift | The latest 6.x release, 6.4.0 or later |
 | Source | [`Tuist/TestNavigator`](https://github.com/cucumberswift/CucumberSwiftSample/tree/main/Tuist/TestNavigator) |
 | README | [TestNavigator's README](https://github.com/cucumberswift/CucumberSwiftSample/blob/main/Tuist/TestNavigator/README.md) |
 
-6.3.0 added these features ([cucumberswift/CucumberSwift#253](https://github.com/cucumberswift/CucumberSwift/pull/253)). With 6.2.0 the sample builds and runs, but its tests are named in camel case, its failure is reported in `StepDefinitions.swift`, and the skipped scenario fails instead.
+6.3.0 added the features it shows ([cucumberswift/CucumberSwift#253](https://github.com/cucumberswift/CucumberSwift/pull/253)).
 
 ### What it shows
 
