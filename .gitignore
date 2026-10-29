@@ -17,3 +17,6 @@ xcuserdata/
 # Bazel's output links, and its lockfile, which the samples leave out like .package.resolved.
 bazel-*
 MODULE.bazel.lock
+
+# CucumberSwift's coverage files, which the Coverage sample writes next to its Project.swift.
+/Tuist/Coverage/coverage/

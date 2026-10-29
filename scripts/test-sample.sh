@@ -36,6 +36,34 @@ parallel_plans() {
   esac
 }
 
+# Checks that a sample that writes coverage did: a manifest with a problem-free run, and a non-empty
+# coverage file for each scenario it lists. Prints a message and returns 1 if not. The sample's
+# scheme sends the files to coverage/ next to its Project.swift.
+check_coverage() {
+  local dir=$1 label=$2
+  python3 - "$dir/coverage" "$label" <<'PY'
+import glob, json, os, sys
+folder, label = sys.argv[1], sys.argv[2]
+runs = sorted(glob.glob(os.path.join(folder, "run-*")), key=os.path.getmtime)
+if not runs:
+    sys.exit(f"::error::{label}: wrote no coverage run in {folder}")
+run = runs[-1]
+manifest = json.load(open(os.path.join(run, "manifest.json")))
+if manifest.get("problem"):
+    sys.exit(f"::error::{label}: coverage problem: {manifest['problem']}")
+if not manifest["scenarios"]:
+    sys.exit(f"::error::{label}: the coverage manifest lists no scenario")
+for scenario in manifest["scenarios"]:
+    if not scenario["profiles"]:
+        sys.exit(f"::error::{label}: \"{scenario['name']}\" has no coverage file")
+    for profile in scenario["profiles"]:
+        path = os.path.join(run, profile)
+        if not os.path.exists(path) or os.path.getsize(path) == 0:
+            sys.exit(f"::error::{label}: \"{profile}\" is missing or empty")
+print(f"{label}: {len(manifest['scenarios'])} scenarios wrote coverage")
+PY
+}
+
 # Lowercase letters and digits only, so a scenario matches its test whether test names
 # are readable ("Checkout › Apply a discount code") or camel case ("ApplyADiscountCode").
 normalize() {
@@ -174,6 +202,11 @@ test_sample() {
       status=1
     elif [ "$xcodebuild_status" -ne 0 ] && [ -z "$failed" ]; then
       echo "::error::$label: xcodebuild exited with $xcodebuild_status, but no test failed"
+      status=1
+    fi
+
+    # The Coverage sample's tests write a coverage file for each scenario.
+    if [ "$sample" = "Coverage" ] && ! check_coverage "$dir" "$label"; then
       status=1
     fi
 
