@@ -53,6 +53,24 @@ else:
     print("\n".join(sorted({f["testIdentifierString"] for f in summary.get("testFailures", [])})))' "$1" "$2"
 }
 
+# Counts the tests in a result bundle's "<Feature> › Coverage scores" suites (the JSON from
+# `xcresulttool get test-results tests`). CucumberSwift adds them when the tests are built
+# with code coverage, which a parallel test plan's runner doesn't measure, so a test plan's
+# count leaves them out.
+coverage_count() {
+  python3 -c 'import json, sys
+def count(nodes, in_coverage=False):
+    total = 0
+    for node in nodes:
+        if node.get("nodeType") == "Test Case":
+            total += in_coverage
+        else:
+            total += count(node.get("children", []),
+                           in_coverage or (node.get("nodeType") == "Test Suite" and node.get("name", "").endswith("Coverage scores")))
+    return total
+print(count(json.loads(sys.argv[1]).get("testNodes", [])))' "$1"
+}
+
 test_sample() {
   local sample=$1
   local dir="$repo_root/Tuist/$sample"
@@ -136,6 +154,14 @@ test_sample() {
       status=1
     fi
     if [ -n "$parallel" ]; then
+      local tests coverage
+      if ! tests=$(xcrun xcresulttool get test-results tests --path "$bundle") ||
+        ! coverage=$(coverage_count "$tests") || ! [[ "$coverage" =~ ^[0-9]+$ ]]; then
+        echo "::error::$label: could not read the test results"
+        status=1
+        continue
+      fi
+      total=$((total - coverage))
       if [ -z "$first_total" ]; then
         first_total=$total
       elif [ "$total" -ne "$first_total" ]; then
