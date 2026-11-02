@@ -5,7 +5,8 @@ Feature: Classifying
     Given a calculator
 
   # A coverage error, which fails this feature on purpose: the scenario runs 44% of classify(_:),
-  # at or below the error level of 50%.
+  # at or below the error level of 50%. Classifying-optimized.feature classifies a number for
+  # each case.
   Scenario: Classifying a small number
     When I classify 7
     Then the display shows "small"

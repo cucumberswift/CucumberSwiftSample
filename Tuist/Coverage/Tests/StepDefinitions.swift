@@ -1,3 +1,4 @@
+import Account
 import Calculator
 import CucumberSwift
 import XCTest
@@ -14,13 +15,16 @@ extension Cucumber: @retroactive StepImplementation {
     public func setupSteps() {
         let calculator = Calculator()
         let display = Display()
+        let user = User(username: "ada", balance: 120)
         var shown = ""
-        var memory = Memory()
+        var session = Session()
+        var menu = ProfileMenu(session: session)
 
-        // setupSteps() runs once, so clear the display and the memory before each scenario.
+        // setupSteps() runs once, so clear the display and log out before each scenario.
         BeforeScenario { _ in
             shown = ""
-            memory = Memory()
+            session = Session()
+            menu = ProfileMenu(session: session)
         }
 
         Given("a calculator") { _, _ in
@@ -42,14 +46,38 @@ extension Cucumber: @retroactive StepImplementation {
         When("I classify {int}") { match, _ in
             shown = calculator.classify(try match.first(\.int))
         }
-        When("I read the memory") { _, _ in
-            shown = String(memory.read())
-        }
-        When("I clear the memory") { _, _ in
-            shown = String(memory.clear())
-        }
         Then("the display shows {string}") { match, _ in
             XCTAssertEqual(shown, try match.first(\.string))
+        }
+
+        // The profile menu's steps. ProfileMenu.feature's click steps each open the menu before
+        // they show an item, so both run the code that opens it. ProfileMenu-optimized.feature
+        // opens it in the Background, and its view steps only show an item.
+        Given("the user is logged in") { _, _ in
+            session.logIn(user)
+        }
+        Given("the user's profile menu is open") { _, _ in
+            try menu.open()
+        }
+        When("I click my user profile") { _, _ in
+            try menu.open()
+            shown = try menu.profile()
+        }
+        When("I click my account") { _, _ in
+            try menu.open()
+            shown = try menu.account()
+        }
+        When("I view my user profile") { _, _ in
+            shown = try menu.profile()
+        }
+        When("I view my account") { _, _ in
+            shown = try menu.account()
+        }
+        Then("I should see my username") { _, _ in
+            XCTAssertEqual(shown, user.username)
+        }
+        Then("I should see my balance") { _, _ in
+            XCTAssertEqual(shown, "$\(user.balance)")
         }
     }
 }

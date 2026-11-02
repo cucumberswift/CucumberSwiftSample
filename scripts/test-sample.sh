@@ -40,10 +40,11 @@ parallel_plans() {
 # Checks that a sample that measures coverage did: a manifest with a problem-free run, a non-empty
 # coverage file for each scenario it lists, and the scores that raise one issue on each feature:
 # Dividing's coverage at the warning level, Classifying's at the error level, Subtracting's
-# redundancy at the warning level and Adding's at the error level. It also checks the redundant
-# steps: Adding's and Subtracting's repeat each other's code in full, and Memory's 2 steps share the
-# code that opens the memory. Prints a message and returns 1 if not. The sample's scheme sends the
-# files to coverage/ next to its Project.swift.
+# redundancy at the warning level and Adding's at the error level, and redundant steps in Profile
+# menu. Each optimized feature must raise none. It also checks the redundant steps at or above the
+# warning level of 50%: Adding's and Subtracting's repeat each other's code in full, and Profile
+# menu's 2 click steps share the code that opens the menu. Prints a message and returns 1 if not.
+# The sample's scheme sends the files to coverage/ next to its Project.swift.
 check_coverage() {
   local dir=$1 label=$2
   python3 - "$dir/coverage" "$label" <<'PY'
@@ -79,7 +80,10 @@ expected = [("Dividing", "coverage", 51, 80), ("Dividing", "redundancy", 0, 29),
             ("Classifying", "coverage", 0, 50), ("Classifying", "redundancy", 0, 29),
             ("Subtracting", "coverage", 81, 100), ("Subtracting", "redundancy", 30, 39),
             ("Adding", "coverage", 81, 100), ("Adding", "redundancy", 40, 100),
-            ("Memory", "coverage", 81, 100), ("Memory", "redundancy", 0, 29)]
+            ("Profile menu", "coverage", 81, 100), ("Profile menu", "redundancy", 0, 29)]
+expected += [(f"{rule}, optimized", kind, 81 if kind == "coverage" else 0, 100 if kind == "coverage" else 29)
+             for rule in ("Dividing", "Classifying", "Subtracting", "Adding", "Profile menu")
+             for kind in ("coverage", "redundancy")]
 for rule, kind, low, high in expected:
     value = score(rule, kind)
     if not low <= value <= high:
@@ -87,20 +91,19 @@ for rule, kind, low, high in expected:
 adds_nothing = sum(s["addsNothing"] for scores in rules.values() for s in scores["scenarios"])
 if adds_nothing != 3:
     sys.exit(f"::error::{label}: 3 scenarios should add no coverage of their own, not {adds_nothing}")
-# Each redundant step as (line, percent, line of the other step, suggests a Scenario Outline).
+# Each redundant step at or above the warning level, as (line, percent, line of the other step,
+# suggests a Scenario Outline). The manifest also lists the steps below the level.
 expected_steps = {
     "Adding": [(8, 100, 12, True), (12, 100, 8, True), (16, 100, 8, True)],
-    "Subtracting": [(10, 100, 18, True), (18, 100, 10, True)],
-    "Memory": [(8, 75, 12, False), (12, 60, 8, False)],
+    "Subtracting": [(11, 100, 19, True), (19, 100, 11, True)],
+    "Profile menu": [(11, 82, 15, False), (15, 82, 11, False)],
 }
-for rule, steps in expected_steps.items():
+for rule in rules:
+    steps = expected_steps.get(rule, [])
     found = sorted((s["line"], round(s["percent"]), s["similarTo"], s["suggestsOutline"])
-                   for s in rules[rule].get("redundantSteps", []))
+                   for s in rules[rule].get("redundantSteps", []) if round(s["percent"]) >= 50)
     if found != steps:
         sys.exit(f"::error::{label}: {rule}'s redundant steps should be {steps}, not {found}")
-for rule in set(rules) - set(expected_steps):
-    if rules[rule].get("redundantSteps"):
-        sys.exit(f"::error::{label}: {rule} should have no redundant step, not {rules[rule]['redundantSteps']}")
 print(f"{label}: {len(manifest['scenarios'])} scenarios wrote coverage; " +
       ", ".join(f"{rule} {kind} {score(rule, kind)}%" for rule, kind, _, _ in expected))
 PY

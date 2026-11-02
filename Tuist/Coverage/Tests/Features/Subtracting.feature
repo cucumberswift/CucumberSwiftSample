@@ -6,6 +6,7 @@ Feature: Subtracting
 
   # A redundancy warning: the last scenario runs the same code as the first, so 1 of the 3
   # scenarios is redundant. That is 33%, at or above the warning level of 30%.
+  # Subtracting-optimized.feature removes it.
   Scenario: Subtracting a larger number
     When I subtract 7 from 4
     Then the display shows "minus 3"
