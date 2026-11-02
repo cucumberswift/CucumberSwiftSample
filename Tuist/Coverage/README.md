@@ -1,27 +1,39 @@
 # Coverage
 
-Code coverage for each scenario: a macOS unit test bundle runs a feature file against a framework,
-and CucumberSwift writes the coverage of each scenario to a file.
+Code coverage scores for each feature: a macOS unit test bundle runs four feature files against a
+framework, and CucumberSwift scores how much of the framework's code each feature's scenarios test,
+and how much of it they test more than once. Each feature file is a demo of one issue that the
+scores raise.
 
-**CucumberSwift version:** 6.8.0 or later, the first release that writes coverage.
+**CucumberSwift version:** 6.8.0 or later, the first release that measures coverage.
 
 [Coverage in the documentation](https://cucumberswift.org/CucumberSwiftSample/documentation/cucumberswiftsample/coverage/) says what it shows, its platform and test target, and the Xcode and CucumberSwift it needs.
 
 ## What it shows
 
-The sample has five parts:
+The sample has a framework, `Sources/Calculator`, and a feature file for each issue that the scores
+raise:
 
-- `Sources/Calculator`, the framework that the scenarios cover. `squareRoot(of:)` has no
-  scenario, so a report shows it as not covered.
-- `Tests/Features/Arithmetic.feature`, a feature file with three scenarios, and
-  `Tests/StepDefinitions.swift`, the steps for it.
-- `Project.swift`, whose scheme turns on code coverage for the `Calculator` framework only,
-  and sets two environment variables for the tests: `CUCUMBER_COVERAGE`, which turns on
-  CucumberSwift's coverage files, and `CUCUMBER_COVERAGE_PATH`, the folder they go to.
-- `report.py`, which reads those files and prints how much of `Sources/Calculator` each
-  scenario covered.
-- `annotate.py` and `CoverageAnnotations`, a plugin that shows each scenario's coverage on its
-  line in the feature file, as Xcode warnings and errors.
+| Feature file | Issue on the `Feature:` line |
+|---|---|
+| `Dividing.feature` | A coverage warning, at or below 80% |
+| `Classifying.feature` | A coverage error, at or below 50% |
+| `Subtracting.feature` | A redundancy warning, at or above 30% |
+| `Adding.feature` | A redundancy error, at or above 40% |
+
+CucumberSwift records each feature's issues in tests of its own, which run after the feature's
+scenarios: `Coverage`, `Redundancy` and `Redundant scenarios`, in a suite named after the feature,
+such as `Adding › Coverage scores`. The errors fail Classifying's `Coverage` test and Adding's
+`Redundancy` test on purpose, and every scenario passes. Xcode shows the warnings in purple and the
+errors in red, as it shows every issue that a test records.
+
+`Project.swift` turns on code coverage for the `Calculator` framework only, and sets four
+environment variables for the tests:
+
+- `CUCUMBER_COVERAGE` turns on the coverage scores.
+- `CUCUMBER_REDUNDANCY` adds the redundancy score.
+- `CUCUMBER_REDUNDANCY_ERROR_LEVEL` sets the redundancy's error level to 40%. It is off by default.
+- `CUCUMBER_COVERAGE_PATH` is the folder for each scenario's coverage file.
 
 ## Run it
 
@@ -37,68 +49,77 @@ mise run generate
 open Tuist/Coverage/Coverage.xcodeproj
 ```
 
-Press ⌘U to run the tests, then read the coverage of each scenario:
-
-```bash
-python3 Tuist/Coverage/report.py
-```
+Press ⌘U to run the tests, then open each feature file in `Tests/Features`. Classifying's and
+Adding's `Coverage scores` tests fail on purpose with the errors.
 
 From the command line, `mise run test Coverage` generates the project and runs its tests. It
-fails unless the tests write a manifest and a coverage file for each scenario.
+fails unless those are the only failures, each feature scores in its ranges, and the tests write a
+coverage file for each scenario.
+
+## Read the scores
+
+CucumberSwift prints each feature's scores when the feature finishes, with each scenario's share of
+the coverage, the regions that no other scenario ran, and its time:
+
+```
+CucumberSwift coverage: Subtracting: 100% of the code its scenarios ran (4 of 4 regions in 2 functions), 15% of all measured code, redundancy 33%
+    Share  Own regions      Time  Scenario
+      29%            0     0.01s  Subtracting a larger number (line 6, adds no coverage of its own)
+      42%            1     0.02s  Subtracting a smaller number (line 11)
+      29%            0     0.01s  Subtracting another larger number (line 16, adds no coverage of its own)
+```
+
+Xcode shows each feature's issue on its `Feature:` line. The coverage issues name the functions
+whose code no scenario ran:
+
+```
+Feature coverage 44%: its scenarios ran 4 of the 9 regions in the 1 function they entered (error at or below 50%, warning at or below 80%). Not run: Calculator.classify(Int), 5 regions, entered by the scenario at line 6.
+```
+
+Xcode 26 shows the warnings in the feature files. With Xcode 16.3, CucumberSwift prints them
+instead, and still records the errors.
+
+### A coverage warning
+
+`Dividing.feature` shows a coverage warning. Coverage 67%: no scenario divides by zero, so the scenario runs 4 of the 6 regions in the functions it enters. That is at or below the warning level of 80%.
+
+![The Dividing feature file in Xcode after the tests ran, with the warning "Feature coverage 67%" on its Feature line, which the Issue navigator lists under the Coverage test.](../../Docs/CucumberSwiftSample.docc/Resources/Coverage-Warning@2x.png)
+
+### A coverage error
+
+`Classifying.feature` shows a coverage error. Coverage 44%: the scenario runs one of the six cases of `classify(_:)`. That is at or below the error level of 50%, so the feature fails on purpose.
+
+![The Classifying feature file in Xcode after the tests ran, with the error "Feature coverage 44%" on its Feature line, which the Issue navigator lists under the Coverage test.](../../Docs/CucumberSwiftSample.docc/Resources/Coverage-Error@2x.png)
+
+### A redundancy warning
+
+`Subtracting.feature` shows a redundancy warning. Redundancy 33%: the last scenario subtracts a larger number, as the first does. That is at or above the warning level of 30%, and the two scenarios have a warning that they add no coverage of their own.
+
+![The Subtracting feature file in Xcode after the tests ran, with the warning "Feature redundancy 33%" on its Feature line and a warning on the first and last scenarios, which the Issue navigator lists under the Redundancy and Redundant scenarios tests.](../../Docs/CucumberSwiftSample.docc/Resources/Redundancy-Warning@2x.png)
+
+### A redundancy error
+
+`Adding.feature` shows a redundancy error. Redundancy 50%: three scenarios add positive numbers. That is at or above the error level of 40% that the scheme sets, so the feature fails on purpose, and the three scenarios have a warning that they add no coverage of their own.
+
+![The Adding feature file in Xcode after the tests ran, with the error "Feature redundancy 50%" on its Feature line and a warning on the three scenarios that add positive numbers, which the Issue navigator lists under the Redundancy and Redundant scenarios tests.](../../Docs/CucumberSwiftSample.docc/Resources/Redundancy-Error@2x.png)
 
 ## What CucumberSwift writes
 
-Each run writes a folder, `coverage/run-<id>`, next to `Project.swift`. The folder contains a `manifest.json`
-and one `.profraw` file for each scenario and each binary that was built with code coverage:
+Each run also writes a folder, `coverage/run-<id>`, next to `Project.swift`. The folder contains a
+`manifest.json` with each feature's scores, and one `.profraw` file for each scenario and each
+binary that was built with code coverage:
 
 ```
-coverage/run-8A2A457D-3BFF-4C6F-9866-6C1123BB6772/
+coverage/run-FD8D4D93-D558-43DB-AB32-FC42A11C0DBB/
     manifest.json
-    S0001-L4-Calculator.profraw
-    S0002-L9-Calculator.profraw
-    S0003-L14-Calculator.profraw
+    S0001-L8-Calculator.profraw
+    S0002-L13-Calculator.profraw
+    …
 ```
 
-The manifest lists the binaries and each scenario that ran, with its feature, name, line, tags
-and files. A file's name starts with the scenario's position in the run and its line in the
-feature file. Each file contains the coverage of one scenario only.
-
-`report.py` merges a scenario's files with `llvm-profdata` and reads them with `llvm-cov`, both
-from Xcode. It prints each scenario's coverage of the functions it ran, and what all the scenarios
-covered of the code in `Sources/Calculator`:
-
-```
-Each scenario, of the functions it ran:
-  Scenario                           Regions  Covered   Functions run
-  Adding two numbers                  3/4         75%   2
-  Subtracting a larger number         3/4         75%   2
-  Dividing by zero                    6/7         86%   2
-
-All scenarios together, of all the code in Sources/Calculator: 11/17 regions, 65%
-```
-
-## See the coverage on the feature file
-
-The scheme runs `annotate.py` after the tests. It reads the newest run and writes
-`coverage/annotations.txt`, and the `CoverageAnnotations` plugin prints those lines on the next
-build, so Xcode shows them at the feature file's lines. Press ⌘U, then ⌘B, and open
-`Tests/Features/Arithmetic.feature`:
-
-- Each scenario below the warning level has a warning on its line: "Scenario coverage 75% of the 2
-  functions it ran".
-- The `Feature:` line has the coverage of all the scenarios together, of all the code in
-  `Sources/Calculator`, and names the functions that no scenario ran.
-
-![The Arithmetic feature file in Xcode. The Feature line has a warning, "Feature coverage 65% of Sources/Calculator", and two scenario lines have a warning, "Scenario coverage 75% of the 2 functions it ran". The Issue navigator lists the same three warnings.](../../Docs/CucumberSwiftSample.docc/Resources/Coverage-Annotations@2x.png)
-
-A scenario or feature below 80% is a warning, and below 50% an error, which fails the build. Set
-other levels with `CUCUMBER_COVERAGE_WARNING_LEVEL` and `CUCUMBER_COVERAGE_ERROR_LEVEL`. Xcode shows
-only warnings and errors, so a scenario at or above the warning level has no line. The annotations
-come from the files of the last test run, so they stay until you run the tests again.
-
-The annotations are this sample's own code, not part of CucumberSwift. Copy `annotate.py`,
-`coverage_tools.py` and `CoverageAnnotations` into your project, and change `CODE` in
-`coverage_tools.py` to the folder you measure.
+A file's name starts with the scenario's position in the run and its line in the feature file.
+Each file contains the coverage of one scenario only, for `llvm-cov` or a coverage report of your
+own.
 
 ## Check the feature files as you build
 
@@ -111,17 +132,16 @@ warnings for this sample. Keep it on for a build server too, with `-skipPackageP
 
 Set `CUCUMBER_COVERAGE` to `YES` in the test environment, and build the targets you want
 measured with code coverage: in Xcode, the **Code Coverage** option of the scheme or test plan,
-and in a Swift package, `swift test --enable-code-coverage`. To choose the folder, set
-`CUCUMBER_COVERAGE_PATH`. Both have a static variable on `Cucumber` too, `Cucumber.coverage` and
-`Cucumber.coveragePath`, which you set in `setupSteps()`. In the scheme, Xcode expands
+and in a Swift package, `swift test --enable-code-coverage`. Set `CUCUMBER_REDUNDANCY` to `YES`
+for the redundancy score, and the levels with `CUCUMBER_COVERAGE_WARNING_LEVEL`,
+`CUCUMBER_COVERAGE_ERROR_LEVEL`, `CUCUMBER_REDUNDANCY_WARNING_LEVEL` and
+`CUCUMBER_REDUNDANCY_ERROR_LEVEL`. Each setting has a static variable on `Cucumber` too, such as
+`Cucumber.coverage`, which you set in `setupSteps()`. In the scheme, Xcode expands
 `$(PROJECT_DIR)` in an environment variable only when the scheme expands variables based on a
 target, as `Project.swift` sets it with `expandVariableFromTarget`.
 
-CucumberSwift measures only the binaries built with code coverage, so a prebuilt framework isn't
-measured. With the Swift Testing runner, coverage and parallel testing are mutually exclusive:
-CucumberSwift runs the scenarios one at a time while coverage is on. See
 [Measuring code coverage](https://cucumberswift.org/CucumberSwift/documentation/cucumberswift/measuring-code-coverage)
-for the limits.
+describes the scores, the levels you can set, the code CucumberSwift measures, and the limits.
 
 ## Learn more
 

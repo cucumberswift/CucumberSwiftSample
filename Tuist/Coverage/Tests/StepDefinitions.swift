@@ -15,10 +15,12 @@ extension Cucumber: @retroactive StepImplementation {
         let calculator = Calculator()
         let display = Display()
         var shown = ""
+        var memory = Memory()
 
-        // setupSteps() runs once, so clear the display before each scenario.
+        // setupSteps() runs once, so clear the display and the memory before each scenario.
         BeforeScenario { _ in
             shown = ""
+            memory = Memory()
         }
 
         Given("a calculator") { _, _ in
@@ -36,6 +38,15 @@ extension Cucumber: @retroactive StepImplementation {
             } catch let error as CalculatorError {
                 shown = display.text(for: error)
             }
+        }
+        When("I classify {int}") { match, _ in
+            shown = calculator.classify(try match.first(\.int))
+        }
+        When("I read the memory") { _, _ in
+            shown = String(memory.read())
+        }
+        When("I clear the memory") { _, _ in
+            shown = String(memory.clear())
         }
         Then("the display shows {string}") { match, _ in
             XCTAssertEqual(shown, try match.first(\.string))

@@ -1,12 +1,12 @@
 import ProjectDescription
 
-// Code coverage for each scenario: a macOS unit test bundle runs the feature files in
-// Tests/Features against the Calculator framework, and CucumberSwift writes the coverage of
-// each scenario to a file.
+// Code coverage scores for each feature: a macOS unit test bundle runs the feature files in
+// Tests/Features against the Calculator framework, and CucumberSwift scores each feature's coverage
+// and redundancy, and shows a warning or an error on its Feature line for a score past its level.
 //
-// The sample depends on CucumberSwift 6.8.0, the first release that writes coverage. Until
-// that release, build it against a local CucumberSwift checkout. Set CUCUMBER_SWIFT_PATH and
-// generate through mise, from anywhere in this repository:
+// The sample depends on CucumberSwift 6.8.0, the first release that measures coverage. To build
+// it against a local CucumberSwift checkout instead, set CUCUMBER_SWIFT_PATH and generate through
+// mise, from anywhere in this repository:
 //
 //     CUCUMBER_SWIFT_PATH=~/src/CucumberSwift mise run generate
 //
@@ -22,9 +22,6 @@ let project = Project(
     name: "Coverage",
     packages: [
         cucumberSwift,
-        // Shows the coverage of each scenario on the feature file, as Xcode warnings and errors.
-        // See README.md.
-        .local(path: "CoverageAnnotations"),
     ],
     targets: [
         // The code that the scenarios cover.
@@ -58,8 +55,6 @@ let project = Project(
                 // CucumberSwiftLint checks the feature files on every build, and shows each problem as
                 // a warning. See README.md.
                 .package(product: "CucumberSwiftLint", type: .plugin),
-                // CoverageAnnotations shows the coverage that annotate.py wrote, on the next build.
-                .package(product: "CoverageAnnotations", type: .plugin),
             ],
             settings: .settings(base: [
                 "SWIFT_VERSION": "6.0",
@@ -74,25 +69,18 @@ let project = Project(
             buildAction: .buildAction(targets: ["CoverageTests"]),
             testAction: .targets(
                 ["CoverageTests"],
-                // CUCUMBER_COVERAGE turns on CucumberSwift's per-scenario files, and
-                // CUCUMBER_COVERAGE_PATH is the folder they go to. Xcode expands $(PROJECT_DIR)
-                // because the scheme expands variables based on the test target.
+                // CucumberSwift scores coverage and redundancy because the scheme builds the
+                // Calculator framework with code coverage. CUCUMBER_REDUNDANCY_ERROR_LEVEL turns on
+                // the redundancy's error, which is off by default. CUCUMBER_COVERAGE_PATH is the
+                // folder for each scenario's coverage file. Xcode expands $(PROJECT_DIR) because
+                // the scheme expands variables based on the test target.
                 arguments: .arguments(environmentVariables: [
-                    "CUCUMBER_COVERAGE": "YES",
+                    "CUCUMBER_REDUNDANCY_ERROR_LEVEL": "40",
                     "CUCUMBER_COVERAGE_PATH": "$(PROJECT_DIR)/coverage",
                 ]),
                 expandVariableFromTarget: "CoverageTests",
-                // After the tests, annotate.py turns the new coverage files into the annotations that
-                // the next build shows on the feature file.
-                postActions: [
-                    .executionAction(
-                        title: "Annotate the feature files",
-                        scriptText: "python3 \"$PROJECT_DIR/annotate.py\"",
-                        target: "CoverageTests"
-                    ),
-                ],
-                // Xcode builds only these targets with code coverage, and CucumberSwift writes
-                // the coverage of each binary that was built with it.
+                // Xcode builds only these targets with code coverage, and CucumberSwift measures
+                // the code of each binary that was built with it.
                 options: .options(coverage: true, codeCoverageTargets: ["Calculator"])
             )
         ),
