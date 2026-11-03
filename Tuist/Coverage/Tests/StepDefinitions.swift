@@ -51,17 +51,17 @@ extension Cucumber: @retroactive StepImplementation {
         }
         When("I double {int}") { match, _ in
             accumulator.enter(try match.first(\.int))
-            shown = display.text(for: accumulator.doubled())
+            shown = accumulator.doubled()
         }
         When("I triple {int}") { match, _ in
             accumulator.enter(try match.first(\.int))
-            shown = display.text(for: accumulator.tripled())
+            shown = accumulator.tripled()
         }
         When("I double it") { _, _ in
-            shown = display.text(for: accumulator.doubled())
+            shown = accumulator.doubled()
         }
         When("I triple it") { _, _ in
-            shown = display.text(for: accumulator.tripled())
+            shown = accumulator.tripled()
         }
         Then("the display shows {string}") { match, _ in
             XCTAssertEqual(shown, try match.first(\.string))
