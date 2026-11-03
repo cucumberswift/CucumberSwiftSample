@@ -1,11 +1,13 @@
+# Role: the AFTER of the coverage warning: add the scenario that is missing.
+# Shows: the new scenario divides by zero, which runs the code that the first scenario skips. The
+# coverage rises to 90%, above the warning level of 80%.
+
 Feature: Dividing, optimized
   The calculator divides whole numbers.
 
   Background:
     Given a calculator
 
-  # Dividing.feature with a scenario that divides by zero, which runs the code that the first
-  # scenario skips. That raises the coverage above the warning level.
   Scenario: Dividing two numbers
     When I divide 6 by 2
     Then the display shows "3"

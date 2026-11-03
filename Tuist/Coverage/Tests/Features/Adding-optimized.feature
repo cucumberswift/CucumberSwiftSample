@@ -1,11 +1,14 @@
+# Role: the AFTER of optimization 1: reduce similar scenarios to one Scenario Outline.
+# Shows: Adding.feature's 3 scenarios are now the rows of one Scenario Outline, and an outline's
+# examples count as one scenario. Redundancy drops from 50% to 0% and no step gets a warning. The
+# negative numbers stay a scenario of their own, because they run different code.
+
 Feature: Adding, optimized
   The calculator adds whole numbers.
 
   Background:
     Given a calculator
 
-  # Adding.feature with no redundancy: one Scenario Outline replaces the 3 scenarios that add
-  # positive numbers, and its examples count as one scenario.
   Scenario Outline: Adding positive numbers
     When I add <first> and <second>
     Then the display shows "<sum>"

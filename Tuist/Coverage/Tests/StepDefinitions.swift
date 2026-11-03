@@ -1,4 +1,3 @@
-import Account
 import Calculator
 import CucumberSwift
 import XCTest
@@ -14,27 +13,28 @@ extension Cucumber: @retroactive StepImplementation {
 
     public func setupSteps() {
         let calculator = Calculator()
-        let display = Display()
-        let user = User(username: "ada", balance: 120)
+        var display = Display()
+        var accumulator = Accumulator()
         var shown = ""
-        var session = Session()
-        var menu = ProfileMenu(session: session)
 
-        // setupSteps() runs once, so clear the display and log out before each scenario.
+        // setupSteps() runs once, so reset the display and the keypad before each scenario.
         BeforeScenario { _ in
             shown = ""
-            session = Session()
-            menu = ProfileMenu(session: session)
+            display = Display()
+            accumulator = Accumulator()
         }
 
         Given("a calculator") { _, _ in
             // The calculator has no state. This step only reads well.
         }
+        Given("the display rounds to {int} decimal places") { match, _ in
+            display = Display(decimalPlaces: try match.first(\.int))
+        }
+        Given("the number {int} is entered") { match, _ in
+            accumulator.enter(try match.first(\.int))
+        }
         When("I add {int} and {int}") { match, _ in
             shown = display.text(for: calculator.add(try match.first(\.int), try match.last(\.int)))
-        }
-        When("I subtract {int} from {int}") { match, _ in
-            shown = display.text(for: calculator.subtract(try match.last(\.int), try match.first(\.int)))
         }
         When("I divide {int} by {int}") { match, _ in
             do {
@@ -46,38 +46,25 @@ extension Cucumber: @retroactive StepImplementation {
         When("I classify {int}") { match, _ in
             shown = calculator.classify(try match.first(\.int))
         }
+        When("I get the quotient of {int} and {int}") { match, _ in
+            shown = display.text(for: calculator.quotient(of: try match.first(\.int), try match.last(\.int)))
+        }
+        When("I double {int}") { match, _ in
+            accumulator.enter(try match.first(\.int))
+            shown = display.text(for: accumulator.doubled())
+        }
+        When("I triple {int}") { match, _ in
+            accumulator.enter(try match.first(\.int))
+            shown = display.text(for: accumulator.tripled())
+        }
+        When("I double it") { _, _ in
+            shown = display.text(for: accumulator.doubled())
+        }
+        When("I triple it") { _, _ in
+            shown = display.text(for: accumulator.tripled())
+        }
         Then("the display shows {string}") { match, _ in
             XCTAssertEqual(shown, try match.first(\.string))
-        }
-
-        // The profile menu's steps. ProfileMenu.feature's click steps each open the menu before
-        // they show an item, so both run the code that opens it. ProfileMenu-optimized.feature
-        // opens it in the Background, and its view steps only show an item.
-        Given("the user is logged in") { _, _ in
-            session.logIn(user)
-        }
-        Given("the user's profile menu is open") { _, _ in
-            try menu.open()
-        }
-        When("I click my user profile") { _, _ in
-            try menu.open()
-            shown = try menu.profile()
-        }
-        When("I click my account") { _, _ in
-            try menu.open()
-            shown = try menu.account()
-        }
-        When("I view my user profile") { _, _ in
-            shown = try menu.profile()
-        }
-        When("I view my account") { _, _ in
-            shown = try menu.account()
-        }
-        Then("I should see my username") { _, _ in
-            XCTAssertEqual(shown, user.username)
-        }
-        Then("I should see my balance") { _, _ in
-            XCTAssertEqual(shown, "$\(user.balance)")
         }
     }
 }

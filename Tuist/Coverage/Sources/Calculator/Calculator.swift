@@ -10,8 +10,9 @@ public struct Calculator {
         first + second
     }
 
-    public func subtract(_ first: Int, _ second: Int) -> Int {
-        first - second
+    /// The exact quotient, which the display rounds to its decimal places.
+    public func quotient(of first: Int, _ second: Int) -> Double {
+        Double(first) / Double(second)
     }
 
     public func divide(_ first: Int, by second: Int) throws -> Int {
