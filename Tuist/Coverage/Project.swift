@@ -5,7 +5,7 @@ import ProjectDescription
 // feature's coverage and redundancy, and shows a warning or an error for a score past its level.
 // Each feature file that raises an issue has an optimized version next to it that raises none.
 //
-// The sample depends on CucumberSwift 6.8.0, the first release that measures coverage. To build
+// The sample depends on CucumberSwift 6.8.1 or later, which measures coverage and only warns about it by default. To build
 // it against a local CucumberSwift checkout instead, set CUCUMBER_SWIFT_PATH and generate through
 // mise, from anywhere in this repository:
 //
@@ -16,7 +16,7 @@ import ProjectDescription
 let cucumberSwift: Package = {
     let path = Environment.cucumberSwiftPath.getString(default: "")
     guard path.isEmpty else { return .local(path: .path(path)) }
-    return .remote(url: "https://github.com/cucumberswift/CucumberSwift", requirement: .upToNextMajor(from: "6.8.0"))
+    return .remote(url: "https://github.com/cucumberswift/CucumberSwift", requirement: .upToNextMajor(from: "6.8.1"))
 }()
 
 let project = Project(
@@ -87,10 +87,12 @@ let project = Project(
                 ["CoverageTests"],
                 // CucumberSwift scores coverage and redundancy because the scheme builds the
                 // Calculator and Account frameworks with code coverage. CUCUMBER_REDUNDANCY_ERROR_LEVEL turns on
-                // the redundancy's error, which is off by default. CUCUMBER_COVERAGE_PATH is the
+                // the redundancy's error, and CUCUMBER_COVERAGE_ERROR_LEVEL turns on the coverage
+                // error. Both are off by default. CUCUMBER_COVERAGE_PATH is the
                 // folder for each scenario's coverage file. Xcode expands $(PROJECT_DIR) because
                 // the scheme expands variables based on the test target.
                 arguments: .arguments(environmentVariables: [
+                    "CUCUMBER_COVERAGE_ERROR_LEVEL": "50",
                     "CUCUMBER_REDUNDANCY_ERROR_LEVEL": "40",
                     "CUCUMBER_COVERAGE_PATH": "$(PROJECT_DIR)/coverage",
                 ]),
