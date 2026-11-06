@@ -17,14 +17,14 @@ Find the scenarios that still pass when the code they test is wrong, and fail th
 
 The sample tests a shopping basket, `Sources/Shop/Basket.swift`, with three feature files. `Basket.feature`, tagged `@before`, has scenarios that miss 2 mutants. `Basket-killed.feature`, tagged `@after`, adds the 2 scenarios that kill them. `Basket-overlap.feature`, also tagged `@after`, has two scenarios that each check something the other misses, so the redundancy score warns on both until you combine them. Between them, the sample shows each result that mutation testing gives: killed and surviving mutants, an equivalent mutant that a `cucumberswift:mutation-ignore` comment marks as ignored, and code that no scenario runs.
 
-The sample's `Package.swift` describes the same code and tests as its `Project.swift`, because `swift package mutation-test` runs on Swift packages. The Xcode project has two schemes, `MutationTesting` and `MutationTesting-Killed`, one for each tag. Both run the tests with code coverage, and the step definitions turn on `Cucumber.mutationTesting` with the last run's report, so each feature's `Coverage scores` suite has a `Mutation` test. It fails with `MutationTesting` and passes with `MutationTesting-Killed`.
+The sample's `Package.swift` describes the same code and tests as its `Project.swift`, because mutation testing runs on Swift packages. The Xcode project has two schemes, `MutationTesting` and `MutationTesting-Killed`, one for each tag. Both run the tests with code coverage, and the step definitions turn on `Cucumber.mutationTesting` with the last run's report, so each feature's `Coverage scores` suite has a `Mutation` test. It fails with `MutationTesting` and passes with `MutationTesting-Killed`.
 
 ### Run it
 
 In `Tuist/MutationTesting`, run the mutation testing on the scenarios tagged `@before`:
 
 ```bash
-swift package mutation-test --tags before
+swift run cucumberswift-mutation-test --tags before
 ```
 
 Then, from the repository root, open the Xcode project and press ⌘U with the `MutationTesting` scheme:

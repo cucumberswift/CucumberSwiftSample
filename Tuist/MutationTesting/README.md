@@ -17,7 +17,7 @@ The sample tests a shopping basket, `Sources/Shop/Basket.swift`, with three feat
 Between them, the sample shows each result that mutation testing gives: killed and surviving mutants, an equivalent mutant
 that a comment marks as ignored, and code that no scenario runs. It also shows how mutation testing changes which
 scenarios the redundancy score marks. `Package.swift` describes the same code and tests as a
-Swift package, because `swift package mutation-test` runs on Swift packages. `Project.swift` generates the Xcode project,
+Swift package, because mutation testing runs on Swift packages. `Project.swift` generates the Xcode project,
 with one scheme for each version of the feature.
 
 ## Run mutation testing on the scenarios with gaps
@@ -25,7 +25,7 @@ with one scheme for each version of the feature.
 In this folder, with Swift 6.1 or later, run the scenarios tagged `@before`:
 
 ```bash
-swift package mutation-test --tags before
+swift run cucumberswift-mutation-test --tags before
 ```
 
 The command works on a throwaway copy of the package in a temporary folder, changes `Basket.swift` there in 17 small ways,
@@ -81,7 +81,7 @@ public private(set) var isSaved = false
 Run its scenarios, tagged `@after`:
 
 ```bash
-swift package mutation-test --tags after
+swift run cucumberswift-mutation-test --tags after
 ```
 
 Every mutant is now killed:
@@ -111,8 +111,8 @@ A comment at the end of a line marks that line instead.
 ### Code that no scenario runs
 
 No scenario prints a receipt, so no scenario can notice a change to `receipt()`. The command doesn't test its mutant,
-and reports it as in code that no scenario runs. That is a coverage gap, which the feature's Coverage score shows, not a
-scenario that misses a change, so it doesn't count in the mutation score:
+and reports it as in code that no scenario runs. That is a coverage gap, not a scenario that misses a change, so it
+doesn't count in the mutation score. The coverage summary shows it only in its share of all measured code:
 
 ```swift
 public func receipt() -> String {
@@ -132,13 +132,13 @@ open Tuist/MutationTesting/MutationTesting.xcodeproj
 
 The project has two schemes. Both run the tests with code coverage, which mutation testing needs:
 
-| Scheme | Runs | After `swift package mutation-test` with | The Mutation test |
+| Scheme | Runs | After `swift run cucumberswift-mutation-test` with | The Mutation test |
 |---|---|---|---|
 | `MutationTesting` | `Basket.feature` (`CUCUMBER_TAGS=before`) | `--tags before` | Fails |
 | `MutationTesting-Killed` | `Basket-killed.feature` and `Basket-overlap.feature` (`CUCUMBER_TAGS=after`) | `--tags after` | Passes |
 
 `StepDefinitions.swift` turns on `Cucumber.mutationTesting` and sets `Cucumber.mutationReport` to the report of the last
-`swift package mutation-test` run. Each feature's `Coverage scores` suite then has a `Mutation` test. With the
+`swift run cucumberswift-mutation-test` run. Each feature's `Coverage scores` suite then has a `Mutation` test. With the
 `MutationTesting` scheme, it fails with an error on the `Feature:` line and on each scenario that runs a surviving mutant's
 code:
 
@@ -151,10 +151,10 @@ Basket.feature:5   This scenario still passes when > at Basket.swift:22 is chang
 Basket.feature:9   This scenario still passes when > at Basket.swift:22 is changed to >=. Add a step that checks this code.
 ```
 
-Run `swift package mutation-test` with the same tags as the scheme, because the Mutation test reads the last run's report.
-It fails with an error that the report is from a run of other scenarios when the tags differ. It also fails with an error
-that the report is out of date after you change `Basket.swift`, until you run the command again. Without a report,
-mutation testing stays off and the suite has no `Mutation` test, as in a fresh checkout.
+Run `swift run cucumberswift-mutation-test` with the same tags as the scheme, because the Mutation test reads the last
+run's report. It fails with an error that the report is from a run of other scenarios when the tags differ. It also
+fails with an error that the report is out of date after you change `Basket.swift`, until you run the command again.
+Without a report, mutation testing stays off and the suite has no `Mutation` test, as in a fresh checkout.
 
 From the command line, `mise run test MutationTesting` generates the project and runs the `MutationTesting` scheme.
 
@@ -202,12 +202,12 @@ Set `CUCUMBER_SWIFT_PATH` to the absolute path of a CucumberSwift checkout, for 
 
 ```bash
 CUCUMBER_SWIFT_PATH=~/src/CucumberSwift mise run generate
-CUCUMBER_SWIFT_PATH=~/src/CucumberSwift swift package mutation-test --tags before
+CUCUMBER_SWIFT_PATH=~/src/CucumberSwift swift run cucumberswift-mutation-test --tags before
 ```
 
 ## Copy it into your project
 
 Copy the CucumberSwift and swift-syntax lines of `Package.swift` into your package, with the `Macros` trait, and run
-`swift package mutation-test` in its folder. To fail your tests on a surviving mutant, turn on `Cucumber.mutationTesting`,
-set `Cucumber.mutationReport` to the report's path, as `StepDefinitions.swift` does, and run your tests with code
-coverage on.
+`swift run cucumberswift-mutation-test` in its folder. To fail your tests on a surviving mutant, turn on
+`Cucumber.mutationTesting`, set `Cucumber.mutationReport` to the report's path, as `StepDefinitions.swift` does, and run
+your tests with code coverage on.
