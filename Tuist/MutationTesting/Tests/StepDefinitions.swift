@@ -7,7 +7,7 @@ import XCTest
 // then runs each scenario in the bundle's feature files as a test.
 extension Cucumber: @retroactive StepImplementation {
     // The bundle that holds the Features folder: the test bundle in Xcode, and the resource bundle that
-    // SwiftPM makes for `swift package mutation-test`.
+    // SwiftPM makes for mutation testing, which runs on the package.
     public var bundle: Bundle {
         #if SWIFT_PACKAGE
         return Bundle.module
@@ -18,11 +18,12 @@ extension Cucumber: @retroactive StepImplementation {
     }
 
     public func setupSteps() {
-        // Turns mutation testing on once `swift package mutation-test` has written its report: each feature's
-        // Coverage scores then have a Mutation test, which fails if a scenario passes with the code changed. It
-        // needs the tests to run with code coverage, as both schemes do. See README.md.
+        // Turns mutation testing on once `swift run cucumberswift-mutation-test` has written its report to
+        // .build/mutation-testing: each feature's Coverage scores then have a Mutation test, which fails if a
+        // scenario passes with the code changed. It needs the tests to run with code coverage, as both schemes
+        // do. See README.md.
         let sample = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-        let report = sample.appendingPathComponent(".build/plugins/Mutation Testing/outputs/reports/mutation-report.json")
+        let report = sample.appendingPathComponent(".build/mutation-testing/mutation-report.json")
         if FileManager.default.fileExists(atPath: report.path) {
             Cucumber.mutationTesting = true
             Cucumber.mutationReport = report.path

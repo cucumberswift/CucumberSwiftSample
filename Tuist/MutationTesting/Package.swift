@@ -1,14 +1,14 @@
 // swift-tools-version:6.1
 import PackageDescription
 
-// The same code and scenarios as Project.swift, as a Swift package, for `swift package mutation-test`.
+// The same code and scenarios as Project.swift, as a Swift package, for `swift run cucumberswift-mutation-test`.
 // Mutation testing runs on Swift packages: it copies this package to a temporary folder, changes
 // Sources/Shop there, and runs `swift test` against each change. It never changes this folder.
 //
 // Mutation testing reads Swift code with swift-syntax, so CucumberSwift's Macros trait is on. To use a
 // local CucumberSwift checkout, set CUCUMBER_SWIFT_PATH, as for Project.swift:
 //
-//     CUCUMBER_SWIFT_PATH=~/src/CucumberSwift swift package mutation-test
+//     CUCUMBER_SWIFT_PATH=~/src/CucumberSwift swift run cucumberswift-mutation-test
 let cucumberSwift: Package.Dependency = {
     if let path = Context.environment["CUCUMBER_SWIFT_PATH"], !path.isEmpty {
         return .package(name: "CucumberSwift", path: path, traits: ["Macros"])

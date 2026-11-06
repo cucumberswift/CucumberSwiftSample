@@ -37,7 +37,7 @@ parallel_plans() {
 }
 
 # The mutation scores a sample's README and docs give, one per line: the tags that
-# `swift package mutation-test --tags` runs, then the score line it must print. A sample with
+# `swift run cucumberswift-mutation-test --tags` runs, then the score line it must print. A sample with
 # scores also runs the command for each line, so the sample can't drift from its docs.
 mutation_scores() {
   case "$1" in
@@ -94,7 +94,7 @@ test_sample() {
   # A sample with mutation scores turns mutation testing on when an earlier run left its report, and
   # that report may be for other scenarios. Its tests run without one, as in a fresh checkout; the
   # mutation-test runs at the end write a new one.
-  [ -z "$(mutation_scores "$sample")" ] || rm -rf "$dir/.build/plugins/Mutation Testing/outputs"
+  [ -z "$(mutation_scores "$sample")" ] || rm -rf "$dir/.build/mutation-testing"
 
   local expected parallel
   expected=$(expected_failures "$sample")
@@ -215,7 +215,7 @@ test_sample() {
     local mutation_log="$results_dir/$sample-mutation-$tags.log"
     echo "::group::$sample: mutation-test --tags $tags"
     local mutation_status=0
-    (cd "$dir" && swift package mutation-test --tags "$tags") 2>&1 | tee "$mutation_log" || mutation_status=$?
+    (cd "$dir" && swift run cucumberswift-mutation-test --tags "$tags") 2>&1 | tee "$mutation_log" || mutation_status=$?
     echo "::endgroup::"
     if [ "$mutation_status" -ne 0 ]; then
       echo "::error::$sample: mutation-test --tags $tags exited with $mutation_status"

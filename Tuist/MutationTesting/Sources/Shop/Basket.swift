@@ -27,7 +27,7 @@ public final class Basket {
         isSaved = true
     }
 
-    /// No scenario prints a receipt, so mutation testing reports this code as code that no scenario runs.
+    /// No scenario prints a receipt: a coverage gap, so mutation testing leaves its mutant out of the score.
     public func receipt() -> String {
         prices.isEmpty ? "Nothing to pay" : "Total: \(total)"
     }
