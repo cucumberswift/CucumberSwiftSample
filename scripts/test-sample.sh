@@ -36,6 +36,18 @@ parallel_plans() {
   esac
 }
 
+# The mutation scores a sample's README and docs give, one per line: the tags that
+# `swift run cucumberswift-mutation-test --tags` runs, then the score line it must print. A sample with
+# scores also runs the command for each line, so the sample can't drift from its docs.
+mutation_scores() {
+  case "$1" in
+    MutationTesting)
+      echo "before 85.7% (12 of 14 mutants detected)"
+      echo "after 100.0% (14 of 14 mutants detected)"
+      ;;
+  esac
+}
+
 # Lowercase letters and digits only, so a scenario matches its test whether test names
 # are readable ("Checkout › Apply a discount code") or camel case ("ApplyADiscountCode").
 normalize() {
@@ -78,6 +90,11 @@ test_sample() {
   fi
   plans=$(python3 -c 'import json, sys; print(" ".join(p["name"] for p in json.load(sys.stdin)["testPlans"] or []))' <<<"$plans_json")
   [ -n "$plans" ] || plans="-"
+
+  # A sample with mutation scores turns mutation testing on when an earlier run left its report, and
+  # that report may be for other scenarios. Its tests run without one, as in a fresh checkout; the
+  # mutation-test runs at the end write a new one.
+  [ -z "$(mutation_scores "$sample")" ] || rm -rf "$dir/.build/mutation-testing"
 
   local expected parallel
   expected=$(expected_failures "$sample")
@@ -191,6 +208,25 @@ test_sample() {
     first_plan=false
     [ "$status" -ne 0 ] || echo "$label: passed${failed:+, failing only where it fails on purpose}"
   done
+
+  local tags score
+  while read -r tags score; do
+    [ -n "$tags" ] || continue
+    local mutation_log="$results_dir/$sample-mutation-$tags.log"
+    echo "::group::$sample: mutation-test --tags $tags"
+    local mutation_status=0
+    (cd "$dir" && swift run cucumberswift-mutation-test --tags "$tags") 2>&1 | tee "$mutation_log" || mutation_status=$?
+    echo "::endgroup::"
+    if [ "$mutation_status" -ne 0 ]; then
+      echo "::error::$sample: mutation-test --tags $tags exited with $mutation_status"
+      status=1
+    elif ! grep -qxF "Mutation score: $score" "$mutation_log"; then
+      echo "::error::$sample: mutation-test --tags $tags should print \"Mutation score: $score\", but printed: $(grep -m1 '^Mutation score:' "$mutation_log")"
+      status=1
+    else
+      echo "$sample: mutation-test --tags $tags scored $score"
+    fi
+  done <<<"$(mutation_scores "$sample")"
   return "$status"
 }
 
