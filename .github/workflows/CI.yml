@@ -6,6 +6,10 @@ name: CI
 # the runner is Bazelisk.
 # Nightly runs catch a CucumberSwift change that breaks a sample.
 #
+# CucumberSwift's Release workflow calls this workflow with cucumber_swift_sha, the commit it is
+# about to release. The call runs only the "main" jobs, with CucumberSwift at that commit, and the
+# release stops before it commits a version if one fails (cucumberswift/CucumberSwift#511).
+#
 # A sample can ask for a CucumberSwift version that is not released yet. Its "release" job
 # then passes without building the sample, and says so in a notice; its "main" job still
 # tests it. Once the version is released, the release job builds it with no change here.
@@ -17,12 +21,20 @@ on:
   schedule:
     - cron: '17 4 * * *'
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      cucumber_swift_sha:
+        description: The CucumberSwift commit to test the samples against; only the main jobs run
+        type: string
+        required: true
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  # A called run has the caller's workflow name and ref, so it gets a group of its own: the caller's
+  # concurrency group would otherwise cancel or queue it.
+  group: ${{ inputs.cucumber_swift_sha && format('samples-for-{0}', inputs.cucumber_swift_sha) || format('{0}-{1}', github.workflow, github.event.pull_request.number || github.ref) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -36,8 +48,11 @@ jobs:
     outputs:
       samples: ${{ steps.list.outputs.samples }}
     steps:
+      # Named in full, because in a called run the default repository is the caller's.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          repository: cucumberswift/CucumberSwiftSample
+          ref: ${{ inputs.cucumber_swift_sha && 'main' || github.sha }}
           persist-credentials: false
       - id: list
         run: |
@@ -66,10 +81,14 @@ jobs:
       matrix:
         sample: ${{ fromJSON(needs.samples.outputs.samples) }}
         # "release" is the dependency each Project.swift or MODULE.bazel declares: the latest release.
-        cucumber-swift: [release, main]
+        # A call from the Release workflow tests only the commit being released.
+        cucumber-swift: ${{ fromJSON(inputs.cucumber_swift_sha && '["main"]' || '["release","main"]') }}
     steps:
+      # Named in full, because in a called run the default repository is the caller's.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          repository: cucumberswift/CucumberSwiftSample
+          ref: ${{ inputs.cucumber_swift_sha && 'main' || github.sha }}
           persist-credentials: false
       # Decides before the toolchain and Tuist steps, so a skipped sample costs little.
       - name: Check CucumberSwift has released what ${{ matrix.sample }} asks for
@@ -84,7 +103,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: cucumberswift/CucumberSwift
-          ref: main
+          ref: ${{ inputs.cucumber_swift_sha || 'main' }}
           path: build/CucumberSwift
           persist-credentials: false
       - name: Show the toolchain
