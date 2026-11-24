@@ -47,9 +47,13 @@ jobs:
       contents: read
     outputs:
       samples: ${{ steps.list.outputs.samples }}
+      # The commit the list came from, so every test job checks out that same commit, even if
+      # main moves on while the list is made.
+      commit: ${{ steps.checkout.outputs.commit }}
     steps:
       # Named in full, because in a called run the default repository is the caller's.
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: cucumberswift/CucumberSwiftSample
           ref: ${{ inputs.cucumber_swift_sha && 'main' || github.sha }}
@@ -84,11 +88,12 @@ jobs:
         # A call from the Release workflow tests only the commit being released.
         cucumber-swift: ${{ fromJSON(inputs.cucumber_swift_sha && '["main"]' || '["release","main"]') }}
     steps:
-      # Named in full, because in a called run the default repository is the caller's.
+      # Named in full, because in a called run the default repository is the caller's. The commit
+      # is the one the samples job listed the samples from.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: cucumberswift/CucumberSwiftSample
-          ref: ${{ inputs.cucumber_swift_sha && 'main' || github.sha }}
+          ref: ${{ needs.samples.outputs.commit }}
           persist-credentials: false
       # Decides before the toolchain and Tuist steps, so a skipped sample costs little.
       - name: Check CucumberSwift has released what ${{ matrix.sample }} asks for
