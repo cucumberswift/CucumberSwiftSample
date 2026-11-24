@@ -23,6 +23,7 @@ mkdir -p "$results_dir"
 expected_failures() {
   case "$1" in
     TestNavigator) echo "Apply a discount code" ;;
+    Coverage) printf '%s\n' "Classifying › Coverage scores" "Adding › Coverage scores" ;;
   esac
 }
 
@@ -34,6 +35,74 @@ parallel_plans() {
   case "$1" in
     ParallelTesting) echo "Parallel" ;;
   esac
+}
+
+# Checks that a sample that measures coverage did: a manifest with a problem-free run, a non-empty
+# coverage file for each scenario it lists, and the scores that raise one issue on each feature:
+# Dividing's coverage at the warning level, Classifying's at the error level, Subtracting's
+# redundancy at the warning level and Adding's at the error level, and redundant steps in Profile
+# menu. Each optimized feature must raise none. It also checks the redundant steps at or above the
+# warning level of 50%: Adding's and Subtracting's repeat each other's code in full, and Profile
+# menu's 2 click steps share the code that opens the menu. Prints a message and returns 1 if not.
+# The sample's scheme sends the files to coverage/ next to its Project.swift.
+check_coverage() {
+  local dir=$1 label=$2
+  python3 - "$dir/coverage" "$label" <<'PY'
+import glob, json, os, sys
+folder, label = sys.argv[1], sys.argv[2]
+runs = sorted(glob.glob(os.path.join(folder, "run-*")), key=os.path.getmtime)
+if not runs:
+    sys.exit(f"::error::{label}: wrote no coverage run in {folder}")
+run = runs[-1]
+manifest = json.load(open(os.path.join(run, "manifest.json")))
+if manifest.get("problem"):
+    sys.exit(f"::error::{label}: coverage problem: {manifest['problem']}")
+if not manifest["scenarios"]:
+    sys.exit(f"::error::{label}: the coverage manifest lists no scenario")
+for scenario in manifest["scenarios"]:
+    if not scenario["profiles"]:
+        sys.exit(f"::error::{label}: \"{scenario['name']}\" has no coverage file")
+    for profile in scenario["profiles"]:
+        path = os.path.join(run, profile)
+        if not os.path.exists(path) or os.path.getsize(path) == 0:
+            sys.exit(f"::error::{label}: \"{profile}\" is missing or empty")
+if manifest.get("scoresProblem"):
+    sys.exit(f"::error::{label}: no scores: {manifest['scoresProblem']}")
+rules = {f["featureName"]: f["scores"] for f in manifest.get("features", [])}
+def score(rule, kind):
+    s = rules.get(rule)
+    if not s:
+        sys.exit(f"::error::{label}: no scores for the {rule} feature")
+    if kind == "coverage":
+        return round(100 * s["coveredRegions"] / s["regionsInFunctionsRun"])
+    return round(s["redundancy"])
+expected = [("Dividing", "coverage", 51, 80), ("Dividing", "redundancy", 0, 29),
+            ("Classifying", "coverage", 0, 50), ("Classifying", "redundancy", 0, 29),
+            ("Adding", "coverage", 81, 100), ("Adding", "redundancy", 40, 100),
+            ("Decimals", "coverage", 81, 100), ("Decimals", "redundancy", 0, 29),
+            ("Doubling", "coverage", 81, 100), ("Doubling", "redundancy", 0, 29)]
+expected += [(f"{rule}, optimized", kind, 81 if kind == "coverage" else 0, 100 if kind == "coverage" else 29)
+             for rule in ("Dividing", "Classifying", "Adding", "Decimals", "Doubling")
+             for kind in ("coverage", "redundancy")]
+adds_nothing = sum(s["addsNothing"] for scores in rules.values() for s in scores["scenarios"])
+if adds_nothing != 2:
+    sys.exit(f"::error::{label}: 2 scenarios should add no coverage of their own, not {adds_nothing}")
+# Each redundant step at or above the warning level, as (line, percent, line of the other step,
+# suggests a Scenario Outline). The manifest also lists the steps below the level.
+expected_steps = {
+    "Adding": [(15, 100, 19, True), (19, 100, 15, True), (23, 100, 15, True)],
+    "Decimals": [(15, 100, 20, False), (20, 100, 15, False)],
+    "Doubling": [(15, 80, 19, False), (19, 80, 15, False)],
+}
+for rule in rules:
+    steps = expected_steps.get(rule, [])
+    found = sorted((s["line"], round(s["percent"]), s["similarTo"], s["suggestsOutline"])
+                   for s in rules[rule].get("redundantSteps", []) if round(s["percent"]) >= 50)
+    if found != steps:
+        sys.exit(f"::error::{label}: {rule}'s redundant steps should be {steps}, not {found}")
+print(f"{label}: {len(manifest['scenarios'])} scenarios wrote coverage; " +
+      ", ".join(f"{rule} {kind} {score(rule, kind)}%" for rule, kind, _, _ in expected))
+PY
 }
 
 # Lowercase letters and digits only, so a scenario matches its test whether test names
@@ -200,6 +269,11 @@ test_sample() {
       status=1
     elif [ "$xcodebuild_status" -ne 0 ] && [ -z "$failed" ]; then
       echo "::error::$label: xcodebuild exited with $xcodebuild_status, but no test failed"
+      status=1
+    fi
+
+    # The Coverage sample's tests write a coverage file for each scenario.
+    if [ "$sample" = "Coverage" ] && ! check_coverage "$dir" "$label"; then
       status=1
     fi
 
