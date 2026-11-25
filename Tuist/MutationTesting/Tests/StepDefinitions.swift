@@ -18,7 +18,7 @@ extension Cucumber: @retroactive StepImplementation {
     }
 
     public func setupSteps() {
-        // Turns mutation testing on once `swift run cucumberswift-mutation-test` has written its report to
+        // Turns mutation testing on once `swift run cucumberswift-cli mutation-test` has written its report to
         // .build/mutation-testing: each feature's Coverage scores then have a Mutation test, which fails if a
         // scenario passes with the code changed. It needs the tests to run with code coverage, as both schemes
         // do. See README.md.

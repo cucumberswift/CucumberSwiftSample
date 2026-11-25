@@ -1,7 +1,7 @@
 import ProjectDescription
 
 // Mutation testing: a macOS framework, Shop, and a unit test bundle whose feature files test it.
-// `swift package mutation-test`, run in this folder, changes Shop's code in a temporary copy of the
+// `swift run cucumberswift-cli mutation-test`, run in this folder, changes Shop's code in a temporary copy of the
 // package that Package.swift describes, and runs the scenarios against each change. This Xcode project
 // then shows the last run's results with each feature's coverage scores, as a Mutation test.
 //
@@ -71,7 +71,7 @@ let project = Project(
 )
 
 /// A scheme that runs the scenarios with `tags`, with code coverage on. Coverage matches each mutant to the scenarios
-/// that run its code, for the Mutation test. Run `swift package mutation-test` with the same CUCUMBER_TAGS first.
+/// that run its code, for the Mutation test. Run `swift run cucumberswift-cli mutation-test` with the same CUCUMBER_TAGS first.
 func scheme(name: String, tags: String) -> Scheme {
     .scheme(
         name: name,

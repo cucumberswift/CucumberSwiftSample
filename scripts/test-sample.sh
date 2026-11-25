@@ -37,7 +37,7 @@ parallel_plans() {
 }
 
 # The mutation scores a sample's README and docs give, one per line: the tags that
-# `swift run cucumberswift-mutation-test --tags` runs, then the score line it must print. A sample with
+# `swift run cucumberswift-cli mutation-test --tags` runs, then the score line it must print. A sample with
 # scores also runs the command for each line, so the sample can't drift from its docs.
 mutation_scores() {
   case "$1" in
@@ -241,7 +241,7 @@ test_sample() {
     local mutation_log="$results_dir/$sample-mutation-$tags.log"
     echo "::group::$sample: mutation-test --tags $tags"
     local mutation_status=0
-    (cd "$dir" && swift run cucumberswift-mutation-test --tags "$tags") 2>&1 | tee "$mutation_log" || mutation_status=$?
+    (cd "$dir" && swift run cucumberswift-cli mutation-test --tags "$tags") 2>&1 | tee "$mutation_log" || mutation_status=$?
     echo "::endgroup::"
     if [ "$mutation_status" -ne 0 ]; then
       echo "::error::$sample: mutation-test --tags $tags exited with $mutation_status"
