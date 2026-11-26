@@ -3,29 +3,28 @@
 Find the scenarios that still pass when the code they test is wrong, with CucumberSwift's mutation testing, and fail
 the tests in Xcode until they don't.
 
-**CucumberSwift version:** 6.9.0 or later, the first with mutation testing. Until 6.9.0 is released, the sample builds
-only against a CucumberSwift checkout (see [Use a local CucumberSwift checkout](#use-a-local-cucumberswift-checkout)).
+**CucumberSwift version:** 6.9.0 or later, the first with mutation testing.
 
 ## What it shows
 
 The sample tests a shopping basket, `Sources/Shop/Basket.swift`, with three feature files:
 
-- `Tests/Features/Basket.feature`, tagged `@before`, whose scenarios miss 2 mutants.
-- `Tests/Features/Basket-killed.feature`, tagged `@after`, which adds the 2 scenarios that kill them.
+- `Tests/Features/Basket.feature`, tagged `@before`, whose scenarios miss two mutants.
+- `Tests/Features/Basket-killed.feature`, tagged `@after`, which adds the two scenarios that kill them.
 - `Tests/Features/Basket-overlap.feature`, tagged `@after`, with two scenarios that each check something the other misses.
 
 Between them, the sample shows each result that mutation testing gives: killed and surviving mutants, an equivalent mutant
 that a comment marks as ignored, and code that no scenario runs. It also shows how mutation testing changes which
 scenarios the redundancy score marks. `Package.swift` describes the same code and tests as a
-Swift package, because mutation testing runs on Swift packages. `Project.swift` generates the Xcode project,
-with one scheme for each version of the feature.
+Swift package, so `swift run cucumberswift-cli mutation-test` runs in this folder. `Project.swift` generates the Xcode
+project, with one scheme for each version of the feature.
 
 ## Run mutation testing on the scenarios with gaps
 
 In this folder, with Swift 6.1 or later, run the scenarios tagged `@before`:
 
 ```bash
-swift run cucumberswift-mutation-test --tags before
+swift run cucumberswift-cli mutation-test --tags before
 ```
 
 The command works on a throwaway copy of the package in a temporary folder, changes `Basket.swift` there in 17 small ways,
@@ -42,7 +41,7 @@ Mutants that no test noticed:
     Scenarios that run this code: Two items pay shipping (line 5), Three items get a discount (line 9)
 ```
 
-### The 2 surviving mutants
+### The two surviving mutants
 
 The basket's shipping rule is the second one. No scenario has a total of exactly 100, so changing `>` to `>=` changes
 nothing that a scenario checks:
@@ -65,7 +64,7 @@ public private(set) var isSaved = false
 
 ### Kill them
 
-`Basket-killed.feature` has the same 3 scenarios and adds one scenario for each survivor:
+`Basket-killed.feature` has the same three scenarios and adds one scenario for each survivor:
 
 ```gherkin
   Scenario: A total of exactly 100 pays shipping
@@ -81,7 +80,7 @@ public private(set) var isSaved = false
 Run its scenarios, tagged `@after`:
 
 ```bash
-swift run cucumberswift-mutation-test --tags after
+swift run cucumberswift-cli mutation-test --tags after
 ```
 
 Every mutant is now killed:
@@ -105,7 +104,7 @@ public func add(contentsOf more: [Int]) {
 }
 ```
 
-The command neither tests nor counts the 2 mutants on that line, and the report lists them as ignored, with the reason.
+The command neither tests nor counts the two mutants on that line, and the report lists them as ignored, with the reason.
 A comment at the end of a line marks that line instead.
 
 ### Code that no scenario runs
@@ -132,13 +131,13 @@ open Tuist/MutationTesting/MutationTesting.xcodeproj
 
 The project has two schemes. Both run the tests with code coverage, which mutation testing needs:
 
-| Scheme | Runs | After `swift run cucumberswift-mutation-test` with | The Mutation test |
+| Scheme | Runs | After `swift run cucumberswift-cli mutation-test` with | The Mutation test |
 |---|---|---|---|
 | `MutationTesting` | `Basket.feature` (`CUCUMBER_TAGS=before`) | `--tags before` | Fails |
 | `MutationTesting-Killed` | `Basket-killed.feature` and `Basket-overlap.feature` (`CUCUMBER_TAGS=after`) | `--tags after` | Passes |
 
 `StepDefinitions.swift` turns on `Cucumber.mutationTesting` and sets `Cucumber.mutationReport` to the report of the last
-`swift run cucumberswift-mutation-test` run. Each feature's `Coverage scores` suite then has a `Mutation` test. With the
+`swift run cucumberswift-cli mutation-test` run. Each feature's `Coverage scores` suite then has a `Mutation` test. With the
 `MutationTesting` scheme, it fails with an error on the `Feature:` line and on each scenario that runs a surviving mutant's
 code:
 
@@ -151,7 +150,7 @@ Basket.feature:5   This scenario still passes when > at Basket.swift:22 is chang
 Basket.feature:9   This scenario still passes when > at Basket.swift:22 is changed to >=. Add a step that checks this code.
 ```
 
-Run `swift run cucumberswift-mutation-test` with the same tags as the scheme, because the Mutation test reads the last
+Run `swift run cucumberswift-cli mutation-test` with the same tags as the scheme, because the Mutation test reads the last
 run's report. It fails with an error that the report is from a run of other scenarios when the tags differ. It also
 fails with an error that the report is out of date after you change `Basket.swift`, until you run the command again.
 Without a report, mutation testing stays off and the suite has no `Mutation` test, as in a fresh checkout.
@@ -202,12 +201,12 @@ Set `CUCUMBER_SWIFT_PATH` to the absolute path of a CucumberSwift checkout, for 
 
 ```bash
 CUCUMBER_SWIFT_PATH=~/src/CucumberSwift mise run generate
-CUCUMBER_SWIFT_PATH=~/src/CucumberSwift swift run cucumberswift-mutation-test --tags before
+CUCUMBER_SWIFT_PATH=~/src/CucumberSwift swift run cucumberswift-cli mutation-test --tags before
 ```
 
 ## Copy it into your project
 
 Copy the CucumberSwift and swift-syntax lines of `Package.swift` into your package, with the `Macros` trait, and run
-`swift run cucumberswift-mutation-test` in its folder. To fail your tests on a surviving mutant, turn on
+`swift run cucumberswift-cli mutation-test` in its folder. To fail your tests on a surviving mutant, turn on
 `Cucumber.mutationTesting`, set `Cucumber.mutationReport` to the report's path, as `StepDefinitions.swift` does, and run
 your tests with code coverage on.
