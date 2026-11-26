@@ -155,7 +155,11 @@ run's report. It fails with an error that the report is from a run of other scen
 fails with an error that the report is out of date after you change `Basket.swift`, until you run the command again.
 Without a report, mutation testing stays off and the suite has no `Mutation` test, as in a fresh checkout.
 
-From the command line, `mise run test MutationTesting` generates the project and runs the `MutationTesting` scheme.
+From the command line, `mise run test MutationTesting` checks the sample as our GitHub Actions CI workflow does. It
+deletes the last run's report, so the `MutationTesting` scheme's tests run without mutation testing, as in a fresh
+checkout. It then runs `swift run cucumberswift-cli mutation-test` with `--tags before` and with `--tags after`, and
+checks each score. The report it leaves is from the `--tags after` run, so run the command with `--tags before` again
+before you test the `MutationTesting` scheme.
 
 ## Find the scenarios to remove or combine
 
